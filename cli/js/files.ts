@@ -96,7 +96,7 @@ export class File
   }
 }
 
-class Stdin implements Reader, ReaderSync, Closer {
+export class Stdin implements Reader, ReaderSync, Closer {
   readonly rid: number;
   constructor() {
     this.rid = 0;
@@ -115,7 +115,7 @@ class Stdin implements Reader, ReaderSync, Closer {
   }
 }
 
-class Stdout implements Writer, WriterSync, Closer {
+export class Stdout implements Writer, WriterSync, Closer {
   readonly rid: number;
   constructor() {
     this.rid = 1;

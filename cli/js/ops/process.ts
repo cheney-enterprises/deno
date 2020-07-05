@@ -16,7 +16,7 @@ export function runStatus(rid: number): Promise<RunStatusResponse> {
   return sendAsync("op_run_status", { rid });
 }
 
-interface RunRequest {
+export interface RunRequest {
   cmd: string[];
   cwd?: string;
   env?: Array<[string, string]>;
@@ -28,7 +28,7 @@ interface RunRequest {
   stderrRid: number;
 }
 
-interface RunResponse {
+export interface RunResponse {
   rid: number;
   pid: number;
   stdinRid: number | null;
