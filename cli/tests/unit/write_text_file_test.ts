@@ -12,7 +12,7 @@ unitTest(
     Deno.writeTextFileSync(filename, "Hello");
     const dataRead = Deno.readTextFileSync(filename);
     assertEquals("Hello", dataRead);
-  }
+  },
 );
 
 unitTest(
@@ -20,14 +20,14 @@ unitTest(
   function writeTextFileSyncByUrl(): void {
     const tempDir = Deno.makeTempDirSync();
     const fileUrl = new URL(
-      `file://${Deno.build.os === "windows" ? "/" : ""}${tempDir}/test.txt`
+      `file://${Deno.build.os === "windows" ? "/" : ""}${tempDir}/test.txt`,
     );
     Deno.writeTextFileSync(fileUrl, "Hello");
     const dataRead = Deno.readTextFileSync(fileUrl);
     assertEquals("Hello", dataRead);
 
     Deno.removeSync(fileUrl, { recursive: true });
-  }
+  },
 );
 
 unitTest({ perms: { write: true } }, function writeTextFileSyncFail(): void {
@@ -53,7 +53,7 @@ unitTest(
     await Deno.writeTextFile(filename, "Hello");
     const dataRead = Deno.readTextFileSync(filename);
     assertEquals("Hello", dataRead);
-  }
+  },
 );
 
 unitTest(
@@ -61,14 +61,14 @@ unitTest(
   async function writeTextFileByUrl(): Promise<void> {
     const tempDir = Deno.makeTempDirSync();
     const fileUrl = new URL(
-      `file://${Deno.build.os === "windows" ? "/" : ""}${tempDir}/test.txt`
+      `file://${Deno.build.os === "windows" ? "/" : ""}${tempDir}/test.txt`,
     );
     await Deno.writeTextFile(fileUrl, "Hello");
     const dataRead = Deno.readTextFileSync(fileUrl);
     assertEquals("Hello", dataRead);
 
     Deno.removeSync(fileUrl, { recursive: true });
-  }
+  },
 );
 
 unitTest(
@@ -79,7 +79,7 @@ unitTest(
     await assertThrowsAsync(async () => {
       await Deno.writeTextFile(filename, "Hello");
     }, Deno.errors.NotFound);
-  }
+  },
 );
 
 unitTest(
@@ -90,5 +90,5 @@ unitTest(
     await assertThrowsAsync(async () => {
       await Deno.writeTextFile(filename, "Hello");
     }, Deno.errors.PermissionDenied);
-  }
+  },
 );

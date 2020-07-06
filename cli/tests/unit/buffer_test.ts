@@ -43,7 +43,7 @@ async function fillBytes(
   buf: Deno.Buffer,
   s: string,
   n: number,
-  fub: Uint8Array
+  fub: Uint8Array,
 ): Promise<string> {
   check(buf, s);
   for (; n > 0; n--) {
@@ -61,7 +61,7 @@ async function fillBytes(
 async function empty(
   buf: Deno.Buffer,
   s: string,
-  fub: Uint8Array
+  fub: Uint8Array,
 ): Promise<void> {
   check(buf, s);
   while (true) {
@@ -163,7 +163,7 @@ unitTest(async function bufferTooLargeByteWrites(): Promise<void> {
       buf.grow(growLen);
     },
     Error,
-    "grown beyond the maximum size"
+    "grown beyond the maximum size",
   );
 });
 
@@ -195,7 +195,7 @@ unitTest(async function bufferReadFrom(): Promise<void> {
       buf,
       "",
       5,
-      testBytes.subarray(0, Math.floor(testBytes.byteLength / i))
+      testBytes.subarray(0, Math.floor(testBytes.byteLength / i)),
     );
     const b = new Deno.Buffer();
     await b.readFrom(buf);
@@ -217,7 +217,7 @@ unitTest(async function bufferReadFromSync(): Promise<void> {
       buf,
       "",
       5,
-      testBytes.subarray(0, Math.floor(testBytes.byteLength / i))
+      testBytes.subarray(0, Math.floor(testBytes.byteLength / i)),
     );
     const b = new Deno.Buffer();
     b.readFromSync(buf);
@@ -243,11 +243,11 @@ unitTest(async function bufferTestGrow(): Promise<void> {
       // Check that buffer has correct data.
       assertEquals(
         buf.bytes().subarray(0, startLen - nread),
-        xBytes.subarray(nread)
+        xBytes.subarray(nread),
       );
       assertEquals(
         buf.bytes().subarray(startLen - nread, startLen - nread + growLen),
-        yBytes
+        yBytes,
       );
     }
   }

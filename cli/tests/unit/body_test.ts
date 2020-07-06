@@ -36,7 +36,7 @@ unitTest(
   { perms: { net: true } },
   async function bodyMultipartFormData(): Promise<void> {
     const response = await fetch(
-      "http://localhost:4545/cli/tests/subdir/multipart_form_data.txt"
+      "http://localhost:4545/cli/tests/subdir/multipart_form_data.txt",
     );
     const text = await response.text();
 
@@ -49,14 +49,14 @@ unitTest(
     assert(formData.has("field_1"));
     assertEquals(formData.get("field_1")!.toString(), "value_1 \r\n");
     assert(formData.has("field_2"));
-  }
+  },
 );
 
 unitTest(
   { perms: { net: true } },
   async function bodyURLEncodedFormData(): Promise<void> {
     const response = await fetch(
-      "http://localhost:4545/cli/tests/subdir/form_urlencoded.txt"
+      "http://localhost:4545/cli/tests/subdir/form_urlencoded.txt",
     );
     const text = await response.text();
 
@@ -70,7 +70,7 @@ unitTest(
     assertEquals(formData.get("field_1")!.toString(), "Hi");
     assert(formData.has("field_2"));
     assertEquals(formData.get("field_2")!.toString(), "<Deno>");
-  }
+  },
 );
 
 unitTest({ perms: {} }, async function bodyURLSearchParams(): Promise<void> {

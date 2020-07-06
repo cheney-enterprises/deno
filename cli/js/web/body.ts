@@ -31,7 +31,7 @@ function validateBodyType(owner: Body, bodySource: BodyInit | null): boolean {
     return true; // null body is fine
   }
   throw new Error(
-    `Bad ${owner.constructor.name} body type: ${bodySource.constructor.name}`
+    `Bad ${owner.constructor.name} body type: ${bodySource.constructor.name}`,
   );
 }
 
@@ -50,7 +50,7 @@ function concatenate(arrays: Uint8Array[]): ArrayBuffer {
 }
 
 async function bufferFromStream(
-  stream: ReadableStreamReader
+  stream: ReadableStreamReader,
 ): Promise<ArrayBuffer> {
   const parts: Uint8Array[] = [];
   const encoder = new TextEncoder();
@@ -84,7 +84,7 @@ export class Body implements domTypes.Body {
 
   constructor(
     protected _bodySource: BodyInit | null,
-    readonly contentType: string
+    readonly contentType: string,
   ) {
     validateBodyType(this, _bodySource);
     this._bodySource = _bodySource;
@@ -154,7 +154,7 @@ export class Body implements domTypes.Body {
               const value = split.join("=").replace(/\+/g, " ");
               formData.append(
                 decodeURIComponent(name),
-                decodeURIComponent(value)
+                decodeURIComponent(value),
               );
             }
           });
@@ -191,7 +191,7 @@ export class Body implements domTypes.Body {
     } else if (typeof this._bodySource === "string") {
       const enc = new TextEncoder();
       return Promise.resolve(
-        enc.encode(this._bodySource).buffer as ArrayBuffer
+        enc.encode(this._bodySource).buffer as ArrayBuffer,
       );
     } else if (this._bodySource instanceof ReadableStreamImpl) {
       return bufferFromStream(this._bodySource.getReader());
@@ -201,13 +201,13 @@ export class Body implements domTypes.Body {
     ) {
       const enc = new TextEncoder();
       return Promise.resolve(
-        enc.encode(this._bodySource.toString()).buffer as ArrayBuffer
+        enc.encode(this._bodySource.toString()).buffer as ArrayBuffer,
       );
     } else if (!this._bodySource) {
       return Promise.resolve(new ArrayBuffer(0));
     }
     throw new Error(
-      `Body type not yet implemented: ${this._bodySource.constructor.name}`
+      `Body type not yet implemented: ${this._bodySource.constructor.name}`,
     );
   }
 }

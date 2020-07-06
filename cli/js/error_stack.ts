@@ -148,7 +148,7 @@ function callSiteToString(callSite: CallSite, isInternal = false): string {
   }
   if (isPromiseAll) {
     result += colors.bold(
-      colors.italic(black(`Promise.all (index ${callSite.getPromiseIndex()})`))
+      colors.italic(black(`Promise.all (index ${callSite.getPromiseIndex()})`)),
     );
     return result;
   }
@@ -168,9 +168,11 @@ function callSiteToString(callSite: CallSite, isInternal = false): string {
     return result;
   }
 
-  result += ` ${black("(")}${getFileLocation(callSite, isInternal)}${black(
-    ")"
-  )}`;
+  result += ` ${black("(")}${getFileLocation(callSite, isInternal)}${
+    black(
+      ")",
+    )
+  }`;
   return result;
 }
 
@@ -219,7 +221,7 @@ function prepareStackTrace(
     __callSiteEvals: CallSiteEval[];
     __formattedFrames: string[];
   },
-  callSites: CallSite[]
+  callSites: CallSite[],
 ): string {
   const mappedCallSites = callSites.map(
     (callSite): CallSite => {
@@ -233,11 +235,11 @@ function prepareStackTrace(
             fileName,
             lineNumber,
             columnNumber,
-          })
+          }),
         );
       }
       return callSite;
-    }
+    },
   );
   Object.defineProperties(error, {
     __callSiteEvals: { value: [], configurable: true },

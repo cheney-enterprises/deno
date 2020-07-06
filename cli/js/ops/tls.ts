@@ -23,7 +23,7 @@ interface EstablishTLSResponse {
 }
 
 export function connectTls(
-  args: ConnectTLSRequest
+  args: ConnectTLSRequest,
 ): Promise<EstablishTLSResponse> {
   return sendAsync("op_connect_tls", args);
 }

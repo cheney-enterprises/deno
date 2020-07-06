@@ -7,7 +7,7 @@ export function createWorker(
   hasSourceCode: boolean,
   sourceCode: string,
   useDenoNamespace: boolean,
-  name?: string
+  name?: string,
 ): { id: number } {
   return sendSync("op_create_worker", {
     specifier,

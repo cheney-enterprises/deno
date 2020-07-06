@@ -17,11 +17,11 @@ if (Deno.build.os !== "windows") {
     assertEquals((await uidProc.status()).code, 0);
     assertEquals((await gidProc.status()).code, 0);
     const uid = parseInt(
-      new TextDecoder("utf-8").decode(await uidProc.output())
+      new TextDecoder("utf-8").decode(await uidProc.output()),
     );
     uidProc.close();
     const gid = parseInt(
-      new TextDecoder("utf-8").decode(await gidProc.output())
+      new TextDecoder("utf-8").decode(await gidProc.output()),
     );
     gidProc.close();
 
@@ -48,7 +48,7 @@ if (Deno.build.os !== "windows") {
       } catch (e) {
         assert(e instanceof Deno.errors.NotFound);
       }
-    }
+    },
   );
 
   unitTest(
@@ -62,7 +62,7 @@ if (Deno.build.os !== "windows") {
       } catch (e) {
         assert(e instanceof Deno.errors.NotFound);
       }
-    }
+    },
   );
 
   unitTest(
@@ -81,7 +81,7 @@ if (Deno.build.os !== "windows") {
         assert(e instanceof Deno.errors.PermissionDenied);
       }
       Deno.removeSync(dirPath, { recursive: true });
-    }
+    },
   );
 
   unitTest(
@@ -100,7 +100,7 @@ if (Deno.build.os !== "windows") {
         assert(e instanceof Deno.errors.PermissionDenied);
       }
       await Deno.remove(dirPath, { recursive: true });
-    }
+    },
   );
 
   unitTest(
@@ -122,7 +122,7 @@ if (Deno.build.os !== "windows") {
       Deno.chownSync(filePath, uid, gid);
 
       Deno.removeSync(dirPath, { recursive: true });
-    }
+    },
   );
 
   unitTest(
@@ -142,7 +142,7 @@ if (Deno.build.os !== "windows") {
       Deno.chownSync(fileUrl, uid, gid);
 
       Deno.removeSync(dirPath, { recursive: true });
-    }
+    },
   );
 
   unitTest(
@@ -162,7 +162,7 @@ if (Deno.build.os !== "windows") {
       await Deno.chown(filePath, uid, gid);
 
       Deno.removeSync(dirPath, { recursive: true });
-    }
+    },
   );
 
   unitTest(
@@ -182,6 +182,6 @@ if (Deno.build.os !== "windows") {
       await Deno.chown(fileUrl, uid, gid);
 
       Deno.removeSync(dirPath, { recursive: true });
-    }
+    },
   );
 }

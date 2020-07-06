@@ -81,7 +81,7 @@ interface IterablePrintConfig<T> {
     ctx: ConsoleContext,
     level: number,
     maxLevel: number,
-    next: () => IteratorResult<[unknown, T], unknown>
+    next: () => IteratorResult<[unknown, T], unknown>,
   ) => string;
   group: boolean;
 }
@@ -93,7 +93,7 @@ function createIterableString<T>(
   ctx: ConsoleContext,
   level: number,
   maxLevel: number,
-  config: IterablePrintConfig<T>
+  config: IterablePrintConfig<T>,
 ): string {
   if (level >= maxLevel) {
     return cyan(`[${config.typeName}]`);
@@ -110,7 +110,7 @@ function createIterableString<T>(
   for (const el of iter) {
     if (entriesLength < MAX_ITERABLE_LENGTH) {
       entries.push(
-        config.entryHandler(el, ctx, level + 1, maxLevel, next.bind(iter))
+        config.entryHandler(el, ctx, level + 1, maxLevel, next.bind(iter)),
       );
     }
     entriesLength++;
@@ -131,15 +131,19 @@ function createIterableString<T>(
   let iContent: string;
   if (config.group && entries.length > MIN_GROUP_LENGTH) {
     const groups = groupEntries(entries, level, value);
-    iContent = `${initIndentation}${groups.join(
-      entryIndentation
-    )}${closingIndentation}`;
+    iContent = `${initIndentation}${
+      groups.join(
+        entryIndentation,
+      )
+    }${closingIndentation}`;
   } else {
     iContent = entries.length === 0 ? "" : ` ${entries.join(", ")} `;
     if (stripColor(iContent).length > LINE_BREAKING_LENGTH) {
-      iContent = `${initIndentation}${entries.join(
-        entryIndentation
-      )}${closingIndentation}`;
+      iContent = `${initIndentation}${
+        entries.join(
+          entryIndentation,
+        )
+      }${closingIndentation}`;
     }
   }
 
@@ -151,7 +155,7 @@ function createIterableString<T>(
 function groupEntries<T>(
   entries: string[],
   level: number,
-  value: Iterable<T>
+  value: Iterable<T>,
 ): string[] {
   let totalLength = 0;
   let maxLength = 0;
@@ -195,12 +199,12 @@ function groupEntries<T>(
       // Divide that by `actualMax` to receive the correct number of columns.
       // The added bias increases the columns for short entries.
       Math.round(
-        Math.sqrt(approxCharHeights * biasedMax * entriesLength) / biasedMax
+        Math.sqrt(approxCharHeights * biasedMax * entriesLength) / biasedMax,
       ),
       // Do not exceed the breakLength.
       Math.floor((LINE_BREAKING_LENGTH - (level + 1)) / actualMax),
       // Limit the columns to a maximum of fifteen.
-      15
+      15,
     );
     // Return with the original output if no grouping should happen.
     if (columns <= 1) {
@@ -242,8 +246,7 @@ function groupEntries<T>(
         str += `${entries[j]}, `[order](padding, " ");
       }
       if (order === "padStart") {
-        const padding =
-          maxLineLength[j - i] +
+        const padding = maxLineLength[j - i] +
           entries[j].length -
           dataLen[j] -
           separatorSpace;
@@ -265,7 +268,7 @@ function stringify(
   value: unknown,
   ctx: ConsoleContext,
   level: number,
-  maxLevel: number
+  maxLevel: number,
 ): string {
   switch (typeof value) {
     case "string":
@@ -323,14 +326,13 @@ function stringifyWithQuotes(
   value: unknown,
   ctx: ConsoleContext,
   level: number,
-  maxLevel: number
+  maxLevel: number,
 ): string {
   switch (typeof value) {
     case "string":
-      const trunc =
-        value.length > STR_ABBREVIATE_SIZE
-          ? value.slice(0, STR_ABBREVIATE_SIZE) + "..."
-          : value;
+      const trunc = value.length > STR_ABBREVIATE_SIZE
+        ? value.slice(0, STR_ABBREVIATE_SIZE) + "..."
+        : value;
       return green(quoteString(trunc)); // Quoted strings are green
     default:
       return stringify(value, ctx, level, maxLevel);
@@ -341,7 +343,7 @@ function createArrayString(
   value: unknown[],
   ctx: ConsoleContext,
   level: number,
-  maxLevel: number
+  maxLevel: number,
 ): string {
   const printConfig: IterablePrintConfig<unknown> = {
     typeName: "Array",
@@ -373,7 +375,7 @@ function createTypedArrayString(
   value: TypedArray,
   ctx: ConsoleContext,
   level: number,
-  maxLevel: number
+  maxLevel: number,
 ): string {
   const valueLength = value.length;
   const printConfig: IterablePrintConfig<unknown> = {
@@ -393,7 +395,7 @@ function createSetString(
   value: Set<unknown>,
   ctx: ConsoleContext,
   level: number,
-  maxLevel: number
+  maxLevel: number,
 ): string {
   const printConfig: IterablePrintConfig<unknown> = {
     typeName: "Set",
@@ -412,7 +414,7 @@ function createMapString(
   value: Map<unknown, unknown>,
   ctx: ConsoleContext,
   level: number,
-  maxLevel: number
+  maxLevel: number,
 ): string {
   const printConfig: IterablePrintConfig<[unknown]> = {
     typeName: "Map",
@@ -420,12 +422,14 @@ function createMapString(
     delims: ["{", "}"],
     entryHandler: (entry, ctx, level, maxLevel): string => {
       const [key, val] = entry;
-      return `${stringifyWithQuotes(
-        key,
-        ctx,
-        level + 1,
-        maxLevel
-      )} => ${stringifyWithQuotes(val, ctx, level + 1, maxLevel)}`;
+      return `${
+        stringifyWithQuotes(
+          key,
+          ctx,
+          level + 1,
+          maxLevel,
+        )
+      } => ${stringifyWithQuotes(val, ctx, level + 1, maxLevel)}`;
     },
     group: false,
   };
@@ -470,7 +474,7 @@ function createPromiseString(
   value: Promise<unknown>,
   ctx: ConsoleContext,
   level: number,
-  maxLevel: number
+  maxLevel: number,
 ): string {
   const [state, result] = Deno.core.getPromiseDetails(value);
 
@@ -478,15 +482,18 @@ function createPromiseString(
     return `Promise { ${cyan("<pending>")} }`;
   }
 
-  const prefix =
-    state === PromiseState.Fulfilled ? "" : `${red("<rejected>")} `;
+  const prefix = state === PromiseState.Fulfilled
+    ? ""
+    : `${red("<rejected>")} `;
 
-  const str = `${prefix}${stringifyWithQuotes(
-    result,
-    ctx,
-    level + 1,
-    maxLevel
-  )}`;
+  const str = `${prefix}${
+    stringifyWithQuotes(
+      result,
+      ctx,
+      level + 1,
+      maxLevel,
+    )
+  }`;
 
   if (str.length + PROMISE_STRING_BASE_LENGTH > LINE_BREAKING_LENGTH) {
     return `Promise {\n${DEFAULT_INDENT.repeat(level + 1)}${str}\n}`;
@@ -501,7 +508,7 @@ function createRawObjectString(
   value: Record<string, unknown>,
   ctx: ConsoleContext,
   level: number,
-  maxLevel: number
+  maxLevel: number,
 ): string {
   if (level >= maxLevel) {
     return cyan("[Object]"); // wrappers are in cyan
@@ -527,23 +534,25 @@ function createRawObjectString(
 
   for (const key of stringKeys) {
     entries.push(
-      `${key}: ${stringifyWithQuotes(value[key], ctx, level + 1, maxLevel)}`
+      `${key}: ${stringifyWithQuotes(value[key], ctx, level + 1, maxLevel)}`,
     );
   }
   for (const key of symbolKeys) {
     entries.push(
-      `${key.toString()}: ${stringifyWithQuotes(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        value[key as any],
-        ctx,
-        level + 1,
-        maxLevel
-      )}`
+      `${key.toString()}: ${
+        stringifyWithQuotes(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          value[key as any],
+          ctx,
+          level + 1,
+          maxLevel,
+        )
+      }`,
     );
   }
   // Making sure color codes are ignored when calculating the total length
-  const totalLength =
-    entries.length + level + stripColor(entries.join("")).length;
+  const totalLength = entries.length + level +
+    stripColor(entries.join("")).length;
 
   ctx.delete(value);
 
@@ -552,9 +561,11 @@ function createRawObjectString(
   } else if (totalLength > LINE_BREAKING_LENGTH) {
     const entryIndent = DEFAULT_INDENT.repeat(level + 1);
     const closingIndent = DEFAULT_INDENT.repeat(level);
-    baseString = `{\n${entryIndent}${entries.join(
-      `,\n${entryIndent}`
-    )}\n${closingIndent}}`;
+    baseString = `{\n${entryIndent}${
+      entries.join(
+        `,\n${entryIndent}`,
+      )
+    }\n${closingIndent}}`;
   } else {
     baseString = `{ ${entries.join(", ")} }`;
   }
@@ -603,7 +614,7 @@ function createObjectString(
     return createTypedArrayString(
       Object.getPrototypeOf(value).constructor.name,
       value,
-      ...args
+      ...args,
     );
   } else {
     // Otherwise, default object formatting
@@ -613,7 +624,7 @@ function createObjectString(
 
 export function stringifyArgs(
   args: unknown[],
-  { depth = DEFAULT_MAX_DEPTH, indentLevel = 0 }: InspectOptions = {}
+  { depth = DEFAULT_MAX_DEPTH, indentLevel = 0 }: InspectOptions = {},
 ): string {
   const first = args[0];
   let a = 0;
@@ -747,7 +758,7 @@ export class Console {
       stringifyArgs(args, {
         indentLevel: this.indentLevel,
       }) + "\n",
-      false
+      false,
     );
   };
 
@@ -765,7 +776,7 @@ export class Console {
       stringifyArgs(args, {
         indentLevel: this.indentLevel,
       }) + "\n",
-      true
+      true,
     );
   };
 
@@ -818,7 +829,7 @@ export class Console {
     if (properties !== undefined && !Array.isArray(properties)) {
       throw new Error(
         "The 'properties' argument must be of type Array. " +
-          "Received type string"
+          "Received type string",
       );
     }
 
@@ -863,8 +874,7 @@ export class Console {
     let hasPrimitives = false;
     Object.keys(resultData).forEach((k, idx): void => {
       const value: unknown = resultData[k]!;
-      const primitive =
-        value === null ||
+      const primitive = value === null ||
         (typeof value !== "function" && typeof value !== "object");
       if (properties === undefined && primitive) {
         hasPrimitives = true;
@@ -983,7 +993,7 @@ export const customInspect = Symbol("Deno.symbols.customInspect");
 
 export function inspect(
   value: unknown,
-  { depth = DEFAULT_MAX_DEPTH }: InspectOptions = {}
+  { depth = DEFAULT_MAX_DEPTH }: InspectOptions = {},
 ): string {
   if (typeof value === "string") {
     return value;

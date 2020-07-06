@@ -32,14 +32,11 @@ async function runStatus(rid: number): Promise<ProcessStatus> {
 export class Process<T extends RunOptions = RunOptions> {
   readonly rid: number;
   readonly pid: number;
-  readonly stdin!: T["stdin"] extends "piped"
-    ? Writer & Closer
+  readonly stdin!: T["stdin"] extends "piped" ? Writer & Closer
     : (Writer & Closer) | null;
-  readonly stdout!: T["stdout"] extends "piped"
-    ? Reader & Closer
+  readonly stdout!: T["stdout"] extends "piped" ? Reader & Closer
     : (Writer & Closer) | null;
-  readonly stderr!: T["stderr"] extends "piped"
-    ? Reader & Closer
+  readonly stderr!: T["stderr"] extends "piped" ? Reader & Closer
     : (Writer & Closer) | null;
 
   // @internal
@@ -101,15 +98,15 @@ export class Process<T extends RunOptions = RunOptions> {
 
 export type ProcessStatus =
   | {
-      success: true;
-      code: 0;
-      signal?: undefined;
-    }
+    success: true;
+    code: 0;
+    signal?: undefined;
+  }
   | {
-      success: false;
-      code: number;
-      signal?: number;
-    };
+    success: false;
+    code: number;
+    signal?: number;
+  };
 
 function isRid(arg: unknown): arg is number {
   return !isNaN(arg as number);

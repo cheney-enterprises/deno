@@ -22,7 +22,7 @@ export { OpenOptions } from "./ops/fs/open.ts";
 
 export function openSync(
   path: string | URL,
-  options: OpenOptions = { read: true }
+  options: OpenOptions = { read: true },
 ): File {
   checkOpenOptions(options);
   const rid = opOpenSync(path, options);
@@ -31,7 +31,7 @@ export function openSync(
 
 export async function open(
   path: string | URL,
-  options: OpenOptions = { read: true }
+  options: OpenOptions = { read: true },
 ): Promise<File> {
   checkOpenOptions(options);
   const rid = await opOpen(path, options);
@@ -171,7 +171,7 @@ function checkOpenOptions(options: OpenOptions): void {
 
   if (createOrCreateNewWithoutWriteOrAppend) {
     throw new Error(
-      "'create' or 'createNew' options require 'write' or 'append' option"
+      "'create' or 'createNew' options require 'write' or 'append' option",
     );
   }
 }

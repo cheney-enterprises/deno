@@ -31,7 +31,7 @@ unitTest(
     const targetPath = Deno.realPathSync(symlink);
     assert(targetPath.startsWith("/"));
     assert(targetPath.endsWith("/target"));
-  }
+  },
 );
 
 unitTest({ perms: { read: false } }, function realPathSyncPerm(): void {
@@ -73,7 +73,7 @@ unitTest(
     const targetPath = await Deno.realPath(symlink);
     assert(targetPath.startsWith("/"));
     assert(targetPath.endsWith("/target"));
-  }
+  },
 );
 
 unitTest({ perms: { read: false } }, async function realPathPerm(): Promise<

@@ -162,7 +162,7 @@ unitTest(function consoleTestStringifyCircular(): void {
   assertEquals(stringify(/[0-9]*/), "/[0-9]*/");
   assertEquals(
     stringify(new Date("2018-12-10T02:26:59.002Z")),
-    "2018-12-10T02:26:59.002Z"
+    "2018-12-10T02:26:59.002Z",
   );
   assertEquals(stringify(new Set([1, 2, 3])), "Set { 1, 2, 3 }");
   assertEquals(
@@ -170,9 +170,9 @@ unitTest(function consoleTestStringifyCircular(): void {
       new Map([
         [1, "one"],
         [2, "two"],
-      ])
+      ]),
     ),
-    `Map { 1 => "one", 2 => "two" }`
+    `Map { 1 => "one", 2 => "two" }`,
   );
   assertEquals(stringify(new WeakSet()), "WeakSet { [items unknown] }");
   assertEquals(stringify(new WeakMap()), "WeakMap { [items unknown] }");
@@ -182,28 +182,28 @@ unitTest(function consoleTestStringifyCircular(): void {
   assertEquals(stringify(new Extended()), "Extended { a: 1, b: 2 }");
   assertEquals(
     stringify(function f(): void {}),
-    "[Function: f]"
+    "[Function: f]",
   );
   assertEquals(
     stringify(async function af(): Promise<void> {}),
-    "[AsyncFunction: af]"
+    "[AsyncFunction: af]",
   );
   assertEquals(
     stringify(function* gf() {}),
-    "[GeneratorFunction: gf]"
+    "[GeneratorFunction: gf]",
   );
   assertEquals(
     stringify(async function* agf() {}),
-    "[AsyncGeneratorFunction: agf]"
+    "[AsyncGeneratorFunction: agf]",
   );
   assertEquals(
     stringify(new Uint8Array([1, 2, 3])),
-    "Uint8Array(3) [ 1, 2, 3 ]"
+    "Uint8Array(3) [ 1, 2, 3 ]",
   );
   assertEquals(stringify(Uint8Array.prototype), "TypedArray {}");
   assertEquals(
     stringify({ a: { b: { c: { d: new Set([1]) } } } }),
-    "{ a: { b: { c: { d: [Set] } } } }"
+    "{ a: { b: { c: { d: [Set] } } } }",
   );
   assertEquals(stringify(nestedObj), nestedObjExpected);
   assertEquals(stringify(JSON), 'JSON { Symbol(Symbol.toStringTag): "JSON" }');
@@ -231,11 +231,11 @@ unitTest(function consoleTestStringifyCircular(): void {
   trace: [Function],
   indentLevel: 0,
   Symbol(isConsoleInstance): true
-}`
+}`,
   );
   assertEquals(
     stringify({ str: 1, [Symbol.for("sym")]: 2, [Symbol.toStringTag]: "TAG" }),
-    'TAG { str: 1, Symbol(sym): 2, Symbol(Symbol.toStringTag): "TAG" }'
+    'TAG { str: 1, Symbol(sym): 2, Symbol(Symbol.toStringTag): "TAG" }',
   );
   // test inspect is working the same
   assertEquals(stripColor(inspect(nestedObj)), nestedObjExpected);
@@ -247,24 +247,24 @@ unitTest(function consoleTestStringifyWithDepth(): void {
   const nestedObj: any = { a: { b: { c: { d: { e: { f: 42 } } } } } };
   assertEquals(
     stripColor(stringifyArgs([nestedObj], { depth: 3 })),
-    "{ a: { b: { c: [Object] } } }"
+    "{ a: { b: { c: [Object] } } }",
   );
   assertEquals(
     stripColor(stringifyArgs([nestedObj], { depth: 4 })),
-    "{ a: { b: { c: { d: [Object] } } } }"
+    "{ a: { b: { c: { d: [Object] } } } }",
   );
   assertEquals(
     stripColor(stringifyArgs([nestedObj], { depth: 0 })),
-    "[Object]"
+    "[Object]",
   );
   assertEquals(
     stripColor(stringifyArgs([nestedObj])),
-    "{ a: { b: { c: { d: [Object] } } } }"
+    "{ a: { b: { c: { d: [Object] } } } }",
   );
   // test inspect is working the same way
   assertEquals(
     stripColor(inspect(nestedObj, { depth: 4 })),
-    "{ a: { b: { c: { d: [Object] } } } }"
+    "{ a: { b: { c: { d: [Object] } } } }",
   );
 });
 
@@ -300,7 +300,7 @@ unitTest(function consoleTestStringifyLargeObject(): void {
     asda: 3,
     x: { a: "asd", x: 3 }
   }
-}`
+}`,
   );
 });
 
@@ -320,7 +320,7 @@ unitTest(function consoleTestStringifyIterable() {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ... 100 more items
-]`
+]`,
   );
 
   const obj = { a: "a", longArray };
@@ -338,7 +338,7 @@ unitTest(function consoleTestStringifyIterable() {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ... 100 more items
   ]
-}`
+}`,
   );
 
   const shortMap = new Map([
@@ -455,7 +455,7 @@ unitTest(function consoleTestStringifyIterable() {
   "98" => 98,
   "99" => 99,
   ... 100 more items
-}`
+}`,
   );
 
   const shortSet = new Set([1, 2, 3]);
@@ -568,14 +568,14 @@ unitTest(function consoleTestStringifyIterable() {
   98,
   99,
   ... 100 more items
-}`
+}`,
   );
 
   const withEmptyEl = Array(10);
   withEmptyEl.fill(0, 4, 6);
   assertEquals(
     stringify(withEmptyEl),
-    `[ <4 empty items>, 0, 0, <4 empty items> ]`
+    `[ <4 empty items>, 0, 0, <4 empty items> ]`,
   );
 
   /* TODO(ry) Fix this test
@@ -653,7 +653,7 @@ unitTest(function consoleTestWithCustomInspectorError(): void {
   assertEquals(stringify(new B({ a: "a" })), "a");
   assertEquals(
     stringify(B.prototype),
-    "{ Symbol(Deno.symbols.customInspect): [Function: [Deno.symbols.customInspect]] }"
+    "{ Symbol(Deno.symbols.customInspect): [Function: [Deno.symbols.customInspect]] }",
   );
 });
 
@@ -672,7 +672,7 @@ unitTest(function consoleTestWithIntegerFormatSpecifier(): void {
   assertEquals(stringify("%d", 12345678901234567890123), "1");
   assertEquals(
     stringify("%i", 12345678901234567890123n),
-    "12345678901234567890123n"
+    "12345678901234567890123n",
   );
 });
 
@@ -711,7 +711,7 @@ unitTest(function consoleTestWithObjectFormatSpecifier(): void {
   assertEquals(stringify("%o", { a: 42 }), "{ a: 42 }");
   assertEquals(
     stringify("%o", { a: { b: { c: { d: new Set([1]) } } } }),
-    "{ a: { b: { c: { d: [Set] } } } }"
+    "{ a: { b: { c: { d: [Set] } } } }",
   );
 });
 
@@ -759,7 +759,7 @@ unitTest(function consoleTestError(): void {
     assert(
       stringify(e)
         .split("\n")[0] // error has been caught
-        .includes("MyError: This is an error")
+        .includes("MyError: This is an error"),
     );
   }
 });
@@ -826,7 +826,7 @@ type ConsoleExamineFunc = (
   csl: any,
   out: StringBuffer,
   err?: StringBuffer,
-  both?: StringBuffer
+  both?: StringBuffer,
 ) => void;
 
 function mockConsole(f: ConsoleExamineFunc): void {
@@ -839,7 +839,7 @@ function mockConsole(f: ConsoleExamineFunc): void {
       const buf = isErr ? err : out;
       buf.add(content);
       both.add(content);
-    }
+    },
   );
   f(csl, out, err, both);
 }
@@ -864,7 +864,7 @@ unitTest(function consoleGroup(): void {
         4
 5
 6
-`
+`,
     );
   });
 });
@@ -894,7 +894,7 @@ unitTest(function consoleGroupWarn(): void {
 5
 6
 7
-`
+`,
     );
   });
 });
@@ -911,7 +911,7 @@ unitTest(function consoleTable(): void {
 │   a   │ "test" │
 │   b   │   1    │
 └───────┴────────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -924,7 +924,7 @@ unitTest(function consoleTable(): void {
 │   a   │    │
 │   b   │ 30 │
 └───────┴────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -940,7 +940,7 @@ unitTest(function consoleTable(): void {
 │   3   │   5   │   6   │        │
 │   4   │ [ 7 ] │ [ 8 ] │        │
 └───────┴───────┴───────┴────────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -955,7 +955,7 @@ unitTest(function consoleTable(): void {
 │     2      │   3    │
 │     3      │ "test" │
 └────────────┴────────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -963,7 +963,7 @@ unitTest(function consoleTable(): void {
       new Map([
         [1, "one"],
         [2, "two"],
-      ])
+      ]),
     );
     assertEquals(
       stripColor(out.toString()),
@@ -973,7 +973,7 @@ unitTest(function consoleTable(): void {
 │     0      │  1  │ "one"  │
 │     1      │  2  │ "two"  │
 └────────────┴─────┴────────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -995,7 +995,7 @@ unitTest(function consoleTable(): void {
 │   g   │           │                   │        │
 │   h   │           │                   │        │
 └───────┴───────────┴───────────────────┴────────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -1017,7 +1017,7 @@ unitTest(function consoleTable(): void {
 │   3   │        │                      │ 10 │        │
 │   4   │ "test" │ { b: 20, c: "test" } │    │        │
 └───────┴────────┴──────────────────────┴────┴────────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -1028,7 +1028,7 @@ unitTest(function consoleTable(): void {
 │ (idx) │
 ├───────┤
 └───────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -1039,7 +1039,7 @@ unitTest(function consoleTable(): void {
 │ (idx) │
 ├───────┤
 └───────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -1050,7 +1050,7 @@ unitTest(function consoleTable(): void {
 │ (iter idx) │
 ├────────────┤
 └────────────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -1061,7 +1061,7 @@ unitTest(function consoleTable(): void {
 │ (iter idx) │
 ├────────────┤
 └────────────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -1079,7 +1079,7 @@ unitTest(function consoleTable(): void {
 │   1   │ "你好"  │
 │   2   │ "Amapá" │
 └───────┴─────────┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -1095,7 +1095,7 @@ unitTest(function consoleTable(): void {
 │   0   │ 1 │ 2 │
 │   1   │ 3 │ 4 │
 └───────┴───┴───┘
-`
+`,
     );
   });
   mockConsole((console, out): void => {
@@ -1109,7 +1109,7 @@ unitTest(function consoleTable(): void {
 │   2   │   │
 │   3   │ 6 │
 └───────┴───┘
-`
+`,
     );
   });
 });

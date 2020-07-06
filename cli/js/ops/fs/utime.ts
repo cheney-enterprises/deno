@@ -8,7 +8,7 @@ function toSecondsFromEpoch(v: number | Date): number {
 export function utimeSync(
   path: string,
   atime: number | Date,
-  mtime: number | Date
+  mtime: number | Date,
 ): void {
   sendSync("op_utime", {
     path,
@@ -21,7 +21,7 @@ export function utimeSync(
 export async function utime(
   path: string,
   atime: number | Date,
-  mtime: number | Date
+  mtime: number | Date,
 ): Promise<void> {
   await sendAsync("op_utime", {
     path,

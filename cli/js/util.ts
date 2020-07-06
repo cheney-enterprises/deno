@@ -72,7 +72,7 @@ export function immutableDefine(
   o: any,
   p: string | number | symbol,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any
+  value: any,
 ): void {
   Object.defineProperty(o, p, {
     value,

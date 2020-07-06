@@ -54,7 +54,7 @@ export async function copy(
   dst: Writer,
   options?: {
     bufSize?: number;
-  }
+  },
 ): Promise<number> {
   let n = 0;
   const bufSize = options?.bufSize ?? DEFAULT_BUFFER_SIZE;
@@ -79,7 +79,7 @@ export async function* iter(
   r: Reader,
   options?: {
     bufSize?: number;
-  }
+  },
 ): AsyncIterableIterator<Uint8Array> {
   const bufSize = options?.bufSize ?? DEFAULT_BUFFER_SIZE;
   const b = new Uint8Array(bufSize);
@@ -97,7 +97,7 @@ export function* iterSync(
   r: ReaderSync,
   options?: {
     bufSize?: number;
-  }
+  },
 ): IterableIterator<Uint8Array> {
   const bufSize = options?.bufSize ?? DEFAULT_BUFFER_SIZE;
   const b = new Uint8Array(bufSize);

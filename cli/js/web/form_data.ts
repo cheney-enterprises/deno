@@ -15,7 +15,7 @@ class FormDataBase {
   append(
     name: string,
     value: string | blob.DenoBlob | domFile.DomFileImpl,
-    filename?: string
+    filename?: string,
   ): void {
     requiredArguments("FormData.append", arguments.length, 2);
     name = String(name);
@@ -81,7 +81,7 @@ class FormDataBase {
   set(
     name: string,
     value: string | blob.DenoBlob | domFile.DomFileImpl,
-    filename?: string
+    filename?: string,
   ): void {
     requiredArguments("FormData.set", arguments.length, 2);
     name = String(name);

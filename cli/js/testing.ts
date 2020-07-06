@@ -51,7 +51,7 @@ After:
   - completed: ${post.opsCompletedAsync}
 
 Make sure to await all promises returned from Deno APIs before
-finishing test case.`
+finishing test case.`,
     );
   };
 }
@@ -60,7 +60,7 @@ finishing test case.`
 // the test case does not "leak" resources - ie. resource table after
 // the test has exactly the same contents as before the test.
 function assertResources(
-  fn: () => void | Promise<void>
+  fn: () => void | Promise<void>,
 ): () => void | Promise<void> {
   return async function resourceSanitizer(): Promise<void> {
     const pre = resources();
@@ -96,7 +96,7 @@ export function test(name: string, fn: () => void | Promise<void>): void;
 // creates a new object with "name" and "fn" fields.
 export function test(
   t: string | TestDefinition,
-  fn?: () => void | Promise<void>
+  fn?: () => void | Promise<void>,
 ): void {
   let testDef: TestDefinition;
   const defaults = {
@@ -219,7 +219,7 @@ function reportToConsole(message: TestMessage): void {
         `${message.end.passed} passed; ${message.end.failed} failed; ` +
         `${message.end.ignored} ignored; ${message.end.measured} measured; ` +
         `${message.end.filtered} filtered out ` +
-        `${formatDuration(message.end.duration)}\n`
+        `${formatDuration(message.end.duration)}\n`,
     );
 
     if (message.end.usedOnly && message.end.failed == 0) {
@@ -246,7 +246,7 @@ class TestRunner {
   constructor(
     tests: TestDefinition[],
     public filterFn: (def: TestDefinition) => boolean,
-    public failFast: boolean
+    public failFast: boolean,
   ) {
     const onlyTests = tests.filter(({ only }) => only);
     this.usedOnly = onlyTests.length > 0;
@@ -299,7 +299,7 @@ class TestRunner {
 
 function createFilterFn(
   filter: undefined | string | RegExp,
-  skip: undefined | string | RegExp
+  skip: undefined | string | RegExp,
 ): (def: TestDefinition) => boolean {
   return (def: TestDefinition): boolean => {
     let passes = true;

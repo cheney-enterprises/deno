@@ -36,14 +36,13 @@ export class Response extends Body.Body implements domTypes.Response {
 
     let status = (Number(init.status) || 0) ?? 200;
     let statusText = init.statusText ?? "";
-    let headers =
-      init.headers instanceof Headers
-        ? init.headers
-        : new Headers(init.headers);
+    let headers = init.headers instanceof Headers
+      ? init.headers
+      : new Headers(init.headers);
 
     if (init.status && (status < 200 || status > 599)) {
       throw new RangeError(
-        `The status provided (${init.status}) is outside the range [200, 599]`
+        `The status provided (${init.status}) is outside the range [200, 599]`,
       );
     }
 
@@ -155,7 +154,7 @@ export class Response extends Body.Body implements domTypes.Response {
   static redirect(url: URL | string, status: number): domTypes.Response {
     if (![301, 302, 303, 307, 308].includes(status)) {
       throw new RangeError(
-        "The redirection status must be one of 301, 302, 303, 307 and 308."
+        "The redirection status must be one of 301, 302, 303, 307 and 308.",
       );
     }
     return new Response(null, {
@@ -170,7 +169,7 @@ function sendFetchReq(
   url: string,
   method: string | null,
   headers: Headers | null,
-  body: ArrayBufferView | undefined
+  body: ArrayBufferView | undefined,
 ): Promise<FetchResponse> {
   let headerArray: Array<[string, string]> = [];
   if (headers) {
@@ -188,7 +187,7 @@ function sendFetchReq(
 
 export async function fetch(
   input: (domTypes.Request & { _bodySource?: unknown }) | URL | string,
-  init?: domTypes.RequestInit
+  init?: domTypes.RequestInit,
 ): Promise<Response> {
   let url: string;
   let method: string | null = null;
@@ -202,10 +201,9 @@ export async function fetch(
     if (init != null) {
       method = init.method || null;
       if (init.headers) {
-        headers =
-          init.headers instanceof Headers
-            ? init.headers
-            : new Headers(init.headers);
+        headers = init.headers instanceof Headers
+          ? init.headers
+          : new Headers(init.headers);
       } else {
         headers = null;
       }
@@ -273,28 +271,32 @@ export async function fetch(
       close(fetchResponse.bodyRid);
       responseBody = null;
     } else {
-      responseBody = new ReadableStreamImpl({
-        async pull(controller: ReadableStreamDefaultController): Promise<void> {
-          try {
-            const b = new Uint8Array(1024 * 32);
-            const result = await read(fetchResponse.bodyRid, b);
-            if (result === null) {
-              controller.close();
-              return close(fetchResponse.bodyRid);
-            }
+      responseBody = new ReadableStreamImpl(
+        {
+          async pull(
+            controller: ReadableStreamDefaultController,
+          ): Promise<void> {
+            try {
+              const b = new Uint8Array(1024 * 32);
+              const result = await read(fetchResponse.bodyRid, b);
+              if (result === null) {
+                controller.close();
+                return close(fetchResponse.bodyRid);
+              }
 
-            controller.enqueue(b.subarray(0, result));
-          } catch (e) {
-            controller.error(e);
-            controller.close();
+              controller.enqueue(b.subarray(0, result));
+            } catch (e) {
+              controller.error(e);
+              controller.close();
+              close(fetchResponse.bodyRid);
+            }
+          },
+          cancel(): void {
+            // When reader.cancel() is called
             close(fetchResponse.bodyRid);
-          }
+          },
         },
-        cancel(): void {
-          // When reader.cancel() is called
-          close(fetchResponse.bodyRid);
-        },
-      });
+      );
     }
 
     responseInit = {
@@ -341,8 +343,7 @@ export async function fetch(
             !redirectUrl.startsWith("http://") &&
             !redirectUrl.startsWith("https://")
           ) {
-            redirectUrl =
-              url.split("//")[0] +
+            redirectUrl = url.split("//")[0] +
               "//" +
               url.split("//")[1].split("/")[0] +
               redirectUrl; // TODO: handle relative redirection more gracefully

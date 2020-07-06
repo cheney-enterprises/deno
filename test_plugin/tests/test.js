@@ -11,7 +11,9 @@ if (Deno.build.os === "darwin") {
   filenameSuffix = ".dylib";
 }
 
-const filename = `../target/${Deno.args[0]}/${filenamePrefix}${filenameBase}${filenameSuffix}`;
+const filename = `../target/${
+  Deno.args[0]
+}/${filenamePrefix}${filenameBase}${filenameSuffix}`;
 
 // This will be checked against open resources after Plugin.close()
 // in runTestClose() below.
@@ -35,7 +37,7 @@ function runTestSync() {
     new Uint8Array([116, 101, 115, 116]),
     new Uint8Array([116, 101, 115, 116]),
     new Uint8Array([49, 50, 51]),
-    new Uint8Array([99, 98, 97])
+    new Uint8Array([99, 98, 97]),
   );
 
   console.log(`Plugin Sync Response: ${textDecoder.decode(response)}`);
@@ -50,7 +52,7 @@ function runTestAsync() {
     testAsync,
     new Uint8Array([116, 101, 115, 116]),
     new Uint8Array([116, 101, 115, 116]),
-    new Uint8Array([49, 50, 51])
+    new Uint8Array([49, 50, 51]),
   );
 
   if (response != null || response != undefined) {
@@ -86,7 +88,7 @@ function runTestPluginClose() {
     throw new Error(
       `Difference in open resources before openPlugin and after Plugin.close():
 Before: ${preStr}
-After: ${postStr}`
+After: ${postStr}`,
     );
   }
 }

@@ -4,7 +4,7 @@ import { pathFromURL } from "../../util.ts";
 
 export function copyFileSync(
   fromPath: string | URL,
-  toPath: string | URL
+  toPath: string | URL,
 ): void {
   fromPath = pathFromURL(fromPath);
   toPath = pathFromURL(toPath);
@@ -14,7 +14,7 @@ export function copyFileSync(
 
 export async function copyFile(
   fromPath: string | URL,
-  toPath: string | URL
+  toPath: string | URL,
 ): Promise<void> {
   fromPath = pathFromURL(fromPath);
   toPath = pathFromURL(toPath);

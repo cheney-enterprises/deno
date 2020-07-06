@@ -11,7 +11,7 @@ export function writeTextFileSync(path: string | URL, data: string): void {
 
 export async function writeTextFile(
   path: string | URL,
-  data: string
+  data: string,
 ): Promise<void> {
   const file = await open(path, { write: true, create: true, truncate: true });
   const enc = new TextEncoder();
