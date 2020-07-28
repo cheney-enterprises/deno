@@ -6,6 +6,92 @@ https://github.com/denoland/deno/releases
 We also have one-line install commands at
 https://github.com/denoland/deno_install
 
+### 1.2.1 / 2020.07.23
+
+Changes in the CLI:
+
+- fix: IPv6 hostname should be compressed (#6772)
+- fix: Ignore polling errors caused by return() in watchFs (#6785)
+- fix: Improve URL compatibility (#6807)
+- fix: ModuleSpecifier removes relative path parts (#6762)
+- fix: Share reqwest client between fetch calls (#6792)
+- fix: add icon and metadata to deno.exe on Windows (#6693)
+- fix: panic for runtime error in TS compiler (#6758)
+- fix: providing empty source code for missing compiled files (#6760)
+- refactor: Make OpDispatcher a trait (#6736, #6742)
+- refactor: Remove duplicate code and allow filename overwrite for DomFile
+  (#6817, #6830)
+- upgrade: Rust 1.45.0 (#6791)
+- upgrade: rusty_v8 0.7.0 (#6801)
+- upgrade: tokio 0.2.22 (#6838)
+
+Changes in std version 0.62.0:
+
+- BREAKING(std/fs): remove readFileStr and writeFileStr (#6848, #6847)
+- feat(std/encoding): add ascii85 module (#6711)
+- feat(std/node): add string_decoder (#6638)
+- fix(std/encoding/toml): could not parse strings with apostrophes/semicolons
+  (#6781)
+- fix(std/testing): assertThrows inheritance (#6623)
+- fix(std/wasi): remove number overload from rights in path_open (#6768)
+- refactor(std/datetime): improve weekOfYear (#6741)
+- refactor(std/path): enrich the types in parse_format_test (#6803)
+
+### 1.2.0 / 2020.07.13
+
+Changes in the CLI:
+
+- feat(cli): Add --cert option to "deno upgrade" (#6609)
+- feat(cli): Add --config flag to "deno install" (#6204)
+- feat(cli): Add --json option to "deno info" (#6372)
+- feat(cli): Add --no-check option (#6456)
+- feat(cli): Add --output option to "deno upgrade" (#6352)
+- feat(cli): Add DENO_CERT environment variable (#6370)
+- feat(cli): Add lockfile support to bundle (#6624)
+- feat(cli/js): Add WriteFileOptions to writeTextFile & writeTextFileSync
+  (#6280)
+- feat(cli/js): Add copy argument to Buffer.bytes (#6697)
+- feat(cli/js): Add performance user timing APIs (#6421)
+- feat(cli/js): Add sorted, trailingComma, compact and iterableLimit to
+  InspectOptions (#6591)
+- feat(cli/js): Deno.chown() make uid, gid args optional (#4612)
+- feat(doc): Improve terminal printer (#6594)
+- feat(test): Add support for regex in filter flag (#6343)
+- feat(unstable): Add Deno.consoleSize() (#6520)
+- feat(unstable): Add Deno.ppid (#6539, #6717)
+- fix(cli): Don't panic when no "HOME" env var is set (#6728)
+- fix(cli): Harden pragma and reference parsing in module analysis (#6702)
+- fix(cli): Panic when stdio is null on windows (#6528)
+- fix(cli): Parsing of --allow-net flag (#6698)
+- fix(cli/js): Allow Buffer to store MAX_SIZE bytes (#6570)
+- fix(cli/js): Definition of URL constructor (#6653)
+- fix(cli/js): Deno.setRaw shouldn't panic on ENOTTY (#6630)
+- fix(cli/js): Fix process socket types (#6676)
+- fix(cli/js): Fix relative redirect in fetch API (#6715)
+- fix(cli/js): Implement IPv4 hostname parsing in URL (#6707)
+- fix(cli/js): Implement spec-compliant host parsing for URL (#6689)
+- fix(cli/js): Response constructor default properties in fetch API (#6650)
+- fix(cli/js): Update timers to ignore Date Override (#6552)
+- perf(cli): Improve .arrayBuffer() speed in fetch API (#6669)
+- refactor(core): Remove control slice from ops (#6048)
+
+Changes in std version 0.61.0:
+
+- BREAKING(std/encoding/hex): Simplify API (#6690)
+- feat(std/datetime): Add weekOfYear (#6659)
+- feat(std/log): Expose Logger type and improve public interface for get & set
+  log levels (#6617)
+- feat(std/node): Add buf.equals() (#6640)
+- feat(std/wasi): Implement fd_readdir (#6631)
+- fix(std): base64 in workers (#6681)
+- fix(std): md5 in workers (#6662)
+- fix(std/http): Properly return port 80 in \_parseAddrFromStr (#6635)
+- fix(std/mime): Boundary random hex values (#6646)
+- fix(std/node): Add encoding argument to Buffer.byteLength (#6639)
+- fix(std/tesing/asserts): AssertEquals/NotEquals should use milliseconds in
+  Date (#6644)
+- fix(std/wasi): Return errno::success from fd_tell (#6636)
+
 ### 1.1.3 / 2020.07.03
 
 Changes in the CLI:

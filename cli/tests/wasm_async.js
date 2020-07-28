@@ -7,7 +7,7 @@
 //        i32.add)
 //      (export "add" (func $add))
 //    )
-// prettier-ignore
+// deno-fmt-ignore
 const bytes = new Uint8Array([
   0x00,
   0x61,

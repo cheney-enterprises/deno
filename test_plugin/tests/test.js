@@ -35,7 +35,6 @@ function runTestSync() {
   const response = Deno.core.dispatch(
     testSync,
     new Uint8Array([116, 101, 115, 116]),
-    new Uint8Array([116, 101, 115, 116]),
     new Uint8Array([49, 50, 51]),
     new Uint8Array([99, 98, 97]),
   );
@@ -51,7 +50,10 @@ function runTestAsync() {
   const response = Deno.core.dispatch(
     testAsync,
     new Uint8Array([116, 101, 115, 116]),
+<<<<<<< HEAD
     new Uint8Array([116, 101, 115, 116]),
+=======
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
     new Uint8Array([49, 50, 51]),
   );
 
@@ -63,7 +65,7 @@ function runTestAsync() {
 function runTestOpCount() {
   const start = Deno.metrics();
 
-  Deno.core.dispatch(testSync, new Uint8Array([116, 101, 115, 116]));
+  Deno.core.dispatch(testSync);
 
   const end = Deno.metrics();
 

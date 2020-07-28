@@ -1,4 +1,4 @@
-// prettier-ignore
+// deno-fmt-ignore
 const wasmCode = new Uint8Array([
   0,
   97,

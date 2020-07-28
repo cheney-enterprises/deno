@@ -19,8 +19,16 @@ export class AssertionError extends Error {
   }
 }
 
-function format(v: unknown): string {
-  let string = globalThis.Deno ? Deno.inspect(v) : String(v);
+export function _format(v: unknown): string {
+  let string = globalThis.Deno
+    ? Deno.inspect(v, {
+      depth: Infinity,
+      sorted: true,
+      trailingComma: true,
+      compact: false,
+      iterableLimit: Infinity,
+    })
+    : String(v);
   if (typeof v == "string") {
     string = `"${string.replace(/(?=["\\])/g, "\\")}"`;
   }
@@ -55,9 +63,13 @@ function buildMessage(diffResult: ReadonlyArray<DiffResult<string>>): string[] {
   messages.push("");
   messages.push(
     `    ${gray(bold("[Diff]"))} ${red(bold("Actual"))} / ${
+<<<<<<< HEAD
       green(
         bold("Expected"),
       )
+=======
+      green(bold("Expected"))
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
     }`,
   );
   messages.push("");
@@ -84,10 +96,12 @@ export function equal(c: unknown, d: unknown): boolean {
       a &&
       b &&
       ((a instanceof RegExp && b instanceof RegExp) ||
-        (a instanceof Date && b instanceof Date) ||
         (a instanceof URL && b instanceof URL))
     ) {
       return String(a) === String(b);
+    }
+    if (a instanceof Date && b instanceof Date) {
+      return a.getTime() === b.getTime();
     }
     if (Object.is(a, b)) {
       return true;
@@ -167,8 +181,8 @@ export function assertEquals(
     return;
   }
   let message = "";
-  const actualString = format(actual);
-  const expectedString = format(expected);
+  const actualString = _format(actual);
+  const expectedString = _format(expected);
   try {
     const diffResult = diff(
       actualString.split("\n"),
@@ -248,19 +262,23 @@ export function assertStrictEquals<T>(
   if (msg) {
     message = msg;
   } else {
-    const actualString = format(actual);
-    const expectedString = format(expected);
+    const actualString = _format(actual);
+    const expectedString = _format(expected);
 
     if (actualString === expectedString) {
       const withOffset = actualString
         .split("\n")
-        .map((l) => `     ${l}`)
+        .map((l) => `    ${l}`)
         .join("\n");
       message =
         `Values have the same structure but are not reference-equal:\n\n${
+<<<<<<< HEAD
           red(
             withOffset,
           )
+=======
+          red(withOffset)
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
         }\n`;
     } else {
       try {
@@ -338,11 +356,17 @@ export function assertArrayContains(
     return;
   }
   if (!msg) {
+<<<<<<< HEAD
     msg = `actual: "${format(actual)}" expected to contain: "${
       format(
         expected,
       )
     }"\nmissing: ${format(missing)}`;
+=======
+    msg = `actual: "${_format(actual)}" expected to contain: "${
+      _format(expected)
+    }"\nmissing: ${_format(missing)}`;
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
   }
   throw new AssertionError(msg);
 }
@@ -391,7 +415,11 @@ export function assertThrows<T = void>(
     if (e instanceof Error === false) {
       throw new AssertionError("A non-Error object was thrown.");
     }
+<<<<<<< HEAD
     if (ErrorClass && !(Object.getPrototypeOf(e) === ErrorClass.prototype)) {
+=======
+    if (ErrorClass && !(e instanceof ErrorClass)) {
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
       msg =
         `Expected error to be instance of "${ErrorClass.name}", but was "${e.constructor.name}"${
           msg ? `: ${msg}` : "."
@@ -437,7 +465,11 @@ export async function assertThrowsAsync<T = void>(
     if (e instanceof Error === false) {
       throw new AssertionError("A non-Error object was thrown or rejected.");
     }
+<<<<<<< HEAD
     if (ErrorClass && !(Object.getPrototypeOf(e) === ErrorClass.prototype)) {
+=======
+    if (ErrorClass && !(e instanceof ErrorClass)) {
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
       msg =
         `Expected error to be instance of "${ErrorClass.name}", but got "${e.name}"${
           msg ? `: ${msg}` : "."

@@ -94,10 +94,14 @@ Deno.test("requestContentLength", function (): void {
     while (chunkOffset < shortText.length) {
       const chunkSize = Math.min(maxChunkSize, shortText.length - chunkOffset);
       chunksData += `${chunkSize.toString(16)}\r\n${
+<<<<<<< HEAD
         shortText.substr(
           chunkOffset,
           chunkSize,
         )
+=======
+        shortText.substr(chunkOffset, chunkSize)
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
       }\r\n`;
       chunkOffset += chunkSize;
     }
@@ -214,10 +218,14 @@ Deno.test("requestBodyWithTransferEncoding", async function (): Promise<void> {
     while (chunkOffset < shortText.length) {
       const chunkSize = Math.min(maxChunkSize, shortText.length - chunkOffset);
       chunksData += `${chunkSize.toString(16)}\r\n${
+<<<<<<< HEAD
         shortText.substr(
           chunkOffset,
           chunkSize,
         )
+=======
+        shortText.substr(chunkOffset, chunkSize)
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
       }\r\n`;
       chunkOffset += chunkSize;
     }
@@ -240,10 +248,14 @@ Deno.test("requestBodyWithTransferEncoding", async function (): Promise<void> {
     while (chunkOffset < longText.length) {
       const chunkSize = Math.min(maxChunkSize, longText.length - chunkOffset);
       chunksData += `${chunkSize.toString(16)}\r\n${
+<<<<<<< HEAD
         longText.substr(
           chunkOffset,
           chunkSize,
         )
+=======
+        longText.substr(chunkOffset, chunkSize)
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
       }\r\n`;
       chunkOffset += chunkSize;
     }
@@ -314,10 +326,14 @@ Deno.test("requestBodyReaderWithTransferEncoding", async function (): Promise<
     while (chunkOffset < shortText.length) {
       const chunkSize = Math.min(maxChunkSize, shortText.length - chunkOffset);
       chunksData += `${chunkSize.toString(16)}\r\n${
+<<<<<<< HEAD
         shortText.substr(
           chunkOffset,
           chunkSize,
         )
+=======
+        shortText.substr(chunkOffset, chunkSize)
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
       }\r\n`;
       chunkOffset += chunkSize;
     }
@@ -349,10 +365,14 @@ Deno.test("requestBodyReaderWithTransferEncoding", async function (): Promise<
     while (chunkOffset < longText.length) {
       const chunkSize = Math.min(maxChunkSize, longText.length - chunkOffset);
       chunksData += `${chunkSize.toString(16)}\r\n${
+<<<<<<< HEAD
         longText.substr(
           chunkOffset,
           chunkSize,
         )
+=======
+        longText.substr(chunkOffset, chunkSize)
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
       }\r\n`;
       chunkOffset += chunkSize;
     }
@@ -638,20 +658,20 @@ Deno.test({
       port: 8124,
       transport: "tcp",
     };
-    assertEquals(expected, server.listener.addr);
+    assertEquals(server.listener.addr, expected);
     server.close();
   },
 });
 
 Deno.test({
-  name: "server.parseAddrFromStr() should be able to parse IPV6 address",
+  name: "server._parseAddrFromStr() should be able to parse IPV6 address",
   fn: (): void => {
     const addr = _parseAddrFromStr("[::1]:8124");
     const expected = {
       hostname: "[::1]",
       port: 8124,
     };
-    assertEquals(expected, addr);
+    assertEquals(addr, expected);
   },
 });
 
@@ -664,7 +684,16 @@ Deno.test({
       port: 8124,
       transport: "tcp",
     };
-    assertEquals(expected, server.listener.addr);
+    assertEquals(server.listener.addr, expected);
     server.close();
+  },
+});
+
+Deno.test({
+  name: "server._parseAddrFromStr() port 80",
+  fn: (): void => {
+    const addr = _parseAddrFromStr(":80");
+    assertEquals(addr.port, 80);
+    assertEquals(addr.hostname, "0.0.0.0");
   },
 });

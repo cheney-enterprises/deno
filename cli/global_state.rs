@@ -9,7 +9,6 @@ use crate::module_graph::ModuleGraphFile;
 use crate::module_graph::ModuleGraphLoader;
 use crate::msg;
 use crate::msg::MediaType;
-use crate::op_error::OpError;
 use crate::permissions::Permissions;
 use crate::state::exit_unstable;
 use crate::tsc::CompiledModule;
@@ -58,6 +57,10 @@ impl GlobalState {
     let dir = deno_dir::DenoDir::new(custom_root)?;
     let deps_cache_location = dir.root.join("deps");
     let http_cache = http_cache::HttpCache::new(&deps_cache_location);
+    let ca_file = flags
+      .ca_file
+      .clone()
+      .or_else(|| env::var("DENO_CERT").map(String::into).ok());
 
     let file_fetcher = SourceFileFetcher::new(
       http_cache,
@@ -65,7 +68,7 @@ impl GlobalState {
       flags.cache_blocklist.clone(),
       flags.no_remote,
       flags.cached_only,
-      flags.ca_file.clone(),
+      ca_file,
     )?;
 
     let ts_compiler = TsCompiler::new(
@@ -170,17 +173,24 @@ impl GlobalState {
     let allow_js = should_allow_js(&module_graph_files);
 
     if should_compile {
-      self
-        .ts_compiler
-        .compile(
-          self.clone(),
-          &out,
-          target_lib,
-          permissions,
-          module_graph,
-          allow_js,
-        )
-        .await?;
+      if self.flags.no_check {
+        self
+          .ts_compiler
+          .transpile(self.clone(), permissions, module_graph)
+          .await?;
+      } else {
+        self
+          .ts_compiler
+          .compile(
+            self.clone(),
+            &out,
+            target_lib,
+            permissions,
+            module_graph,
+            allow_js,
+          )
+          .await?;
+      }
     }
 
     if let Some(ref lockfile) = self.lockfile {
@@ -225,16 +235,22 @@ impl GlobalState {
     };
 
     let compiled_module = if was_compiled {
-      state1
-        .ts_compiler
-        .get_compiled_module(&out.url)
-        .map_err(|e| {
-          let msg = e.to_string();
-          OpError::other(format!(
-            "Failed to get compiled source code of {}.\nReason: {}",
-            out.url, msg
-          ))
-        })?
+      match state1.ts_compiler.get_compiled_module(&out.url) {
+        Ok(module) => module,
+        Err(e) => {
+          let msg = format!(
+            "Failed to get compiled source code of \"{}\".\nReason: {}\n\
+            If the source file provides only type exports, prefer to use \"import type\" or \"export type\" syntax instead.",
+            out.url, e.to_string()
+          );
+          info!("{} {}", crate::colors::yellow("Warning"), msg);
+
+          CompiledModule {
+            code: "".to_string(),
+            name: out.url.to_string(),
+          }
+        }
+      }
     } else {
       CompiledModule {
         code: String::from_utf8(out.source_code.clone())?,

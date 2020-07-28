@@ -64,9 +64,13 @@ unitTest({ perms: { read: true } }, async function readDirWithUrl(): Promise<
 > {
   const files = [];
   for await (
+<<<<<<< HEAD
     const dirEntry of Deno.readDir(
       pathToAbsoluteFileUrl("cli/tests"),
     )
+=======
+    const dirEntry of Deno.readDir(pathToAbsoluteFileUrl("cli/tests"))
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
   ) {
     files.push(dirEntry);
   }

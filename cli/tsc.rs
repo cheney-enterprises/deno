@@ -7,6 +7,7 @@ use crate::doc::Location;
 use crate::file_fetcher::SourceFile;
 use crate::file_fetcher::SourceFileFetcher;
 use crate::flags::Flags;
+use crate::fmt_errors::JSError;
 use crate::global_state::GlobalState;
 use crate::module_graph::ModuleGraph;
 use crate::module_graph::ModuleGraphLoader;
@@ -21,17 +22,17 @@ use crate::state::State;
 use crate::swc_common::comments::CommentKind;
 use crate::swc_common::Span;
 use crate::swc_ecma_ast;
+use crate::swc_ecma_visit;
+use crate::swc_ecma_visit::Node;
+use crate::swc_ecma_visit::Visit;
 use crate::swc_util::AstParser;
 use crate::swc_util::SwcDiagnosticBuffer;
 use crate::version;
-use crate::web_worker::WebWorker;
-use crate::worker::WorkerEvent;
+use crate::worker::Worker;
 use core::task::Context;
-use deno_core::Buf;
 use deno_core::ErrBox;
 use deno_core::ModuleSpecifier;
 use deno_core::StartupData;
-use futures::future::Either;
 use futures::future::Future;
 use futures::future::FutureExt;
 use log::debug;
@@ -56,8 +57,6 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::task::Poll;
-use swc_ecma_visit::Node;
-use swc_ecma_visit::Visit;
 use url::Url;
 
 pub const AVAILABLE_LIBS: &[&str] = &[
@@ -128,30 +127,47 @@ pub struct CompiledModule {
   pub name: String,
 }
 
-pub struct CompilerWorker(WebWorker);
+pub struct CompilerWorker {
+  worker: Worker,
+  response: Arc<Mutex<Option<String>>>,
+}
 
 impl CompilerWorker {
   pub fn new(name: String, startup_data: StartupData, state: State) -> Self {
     let state_ = state.clone();
-    let mut worker = WebWorker::new(name, startup_data, state_, false);
+    let mut worker = Worker::new(name, startup_data, state_);
+    let response = Arc::new(Mutex::new(None));
     {
       let isolate = &mut worker.isolate;
-      ops::compiler::init(isolate, &state);
+      ops::runtime::init(isolate, &state);
+      ops::errors::init(isolate, &state);
+      ops::timers::init(isolate, &state);
+      ops::compiler::init(isolate, &state, response.clone());
     }
-    Self(worker)
+
+    Self { worker, response }
+  }
+
+  pub fn get_response(&mut self) -> String {
+    let mut maybe_response = self.response.lock().unwrap();
+    assert!(
+      maybe_response.is_some(),
+      "Unexpected missing response from TS compiler"
+    );
+    maybe_response.take().unwrap()
   }
 }
 
 impl Deref for CompilerWorker {
-  type Target = WebWorker;
+  type Target = Worker;
   fn deref(&self) -> &Self::Target {
-    &self.0
+    &self.worker
   }
 }
 
 impl DerefMut for CompilerWorker {
   fn deref_mut(&mut self) -> &mut Self::Target {
-    &mut self.0
+    &mut self.worker
   }
 }
 
@@ -160,14 +176,26 @@ impl Future for CompilerWorker {
 
   fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
     let inner = self.get_mut();
-    inner.0.poll_unpin(cx)
+    inner.worker.poll_unpin(cx)
   }
 }
 
-// TODO(bartlomieju): use JSONC parser from dprint instead of Regex
 lazy_static! {
+  // TODO(bartlomieju): use JSONC parser from dprint instead of Regex
   static ref CHECK_JS_RE: Regex =
     Regex::new(r#""checkJs"\s*?:\s*?true"#).unwrap();
+  static ref DENO_TYPES_RE: Regex =
+    Regex::new(r"^\s*@deno-types\s?=\s?(\S+)\s*(.*)\s*$").unwrap();
+  // These regexes were adapted from TypeScript
+  // https://github.com/microsoft/TypeScript/blob/87fd1827f2f2f3dafa76c14f13b9defc69481766/src/compiler/parser.ts#L8780-L8781
+  static ref XML_COMMENT_START_RE: Regex =
+    Regex::new(r"^/\s*<(\S+)\s.*?/>").unwrap();
+  static ref PATH_REFERENCE_RE: Regex =
+    Regex::new(r#"(\spath\s*=\s*)('|")(.+?)('|")"#).unwrap();
+  static ref TYPES_REFERENCE_RE: Regex =
+    Regex::new(r#"(\stypes\s*=\s*)('|")(.+?)('|")"#).unwrap();
+  static ref LIB_REFERENCE_RE: Regex =
+    Regex::new(r#"(\slib\s*=\s*)('|")(.+?)('|")"#).unwrap();
 }
 
 /// Create a new worker with snapshot of TS compiler and setup compiler's
@@ -198,7 +226,9 @@ fn create_compiler_worker(
     startup_data::compiler_isolate_init(),
     worker_state,
   );
-  worker.execute("bootstrap.tsCompilerRuntime()").unwrap();
+  worker
+    .execute("globalThis.bootstrapCompilerRuntime()")
+    .unwrap();
   worker
 }
 
@@ -302,6 +332,13 @@ impl CompiledFileMetadata {
   }
 }
 
+#[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct TranspileSourceFile {
+  pub source_code: String,
+  pub file_name: String,
+}
+
 /// Emit a SHA256 hash based on source code, deno version and TS config.
 /// Used to check if a recompilation for source code is needed.
 fn source_code_version_hash(
@@ -374,6 +411,13 @@ struct CompileResponse {
   diagnostics: Diagnostic,
   emit_map: HashMap<String, EmittedSource>,
   build_info: Option<String>,
+  stats: Option<Vec<Stat>>,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TranspileResponse {
+  diagnostics: Diagnostic,
+  emit_map: HashMap<String, EmittedSource>,
   stats: Option<Vec<Stat>>,
 }
 
@@ -576,17 +620,15 @@ impl TsCompiler {
       }),
     };
 
-    let req_msg = j.to_string().into_boxed_str().into_boxed_bytes();
+    let req_msg = j.to_string();
 
     // TODO(bartlomieju): lift this call up - TSC shouldn't print anything
     info!("{} {}", colors::green("Check"), module_url.to_string());
 
-    let msg =
+    let json_str =
       execute_in_same_thread(global_state, permissions, req_msg).await?;
 
-    let json_str = std::str::from_utf8(&msg).unwrap();
-
-    let compile_response: CompileResponse = serde_json::from_str(json_str)?;
+    let compile_response: CompileResponse = serde_json::from_str(&json_str)?;
 
     if !compile_response.diagnostics.items.is_empty() {
       return Err(ErrBox::from(compile_response.diagnostics));
@@ -625,6 +667,28 @@ impl TsCompiler {
       .add_to_graph(&module_specifier, None)
       .await?;
     let module_graph = module_graph_loader.get_graph();
+    let module_graph_files = module_graph.values().collect::<Vec<_>>();
+    // Check integrity of every file in module graph
+    if let Some(ref lockfile) = global_state.lockfile {
+      let mut g = lockfile.lock().unwrap();
+
+      for graph_file in &module_graph_files {
+        let check_passed =
+          g.check_or_insert(&graph_file.url, &graph_file.source_code);
+
+        if !check_passed {
+          eprintln!(
+            "Subresource integrity check failed --lock={}\n{}",
+            g.filename, graph_file.url
+          );
+          std::process::exit(10);
+        }
+      }
+    }
+    if let Some(ref lockfile) = global_state.lockfile {
+      let g = lockfile.lock().unwrap();
+      g.write()?;
+    }
     let module_graph_json =
       serde_json::to_value(module_graph).expect("Failed to serialize data");
 
@@ -663,13 +727,12 @@ impl TsCompiler {
       }),
     };
 
-    let req_msg = j.to_string().into_boxed_str().into_boxed_bytes();
+    let req_msg = j.to_string();
 
-    let msg =
+    let json_str =
       execute_in_same_thread(global_state, permissions, req_msg).await?;
-    let json_str = std::str::from_utf8(&msg).unwrap();
 
-    let bundle_response: BundleResponse = serde_json::from_str(json_str)?;
+    let bundle_response: BundleResponse = serde_json::from_str(&json_str)?;
 
     maybe_log_stats(bundle_response.stats);
 
@@ -680,6 +743,71 @@ impl TsCompiler {
     assert!(bundle_response.bundle_output.is_some());
     let output = bundle_response.bundle_output.unwrap();
     Ok(output)
+  }
+
+  pub async fn transpile(
+    &self,
+    global_state: GlobalState,
+    permissions: Permissions,
+    module_graph: ModuleGraph,
+  ) -> Result<(), ErrBox> {
+    let mut source_files: Vec<TranspileSourceFile> = Vec::new();
+    for (_, value) in module_graph.iter() {
+      let url = Url::parse(&value.url).expect("Filename is not a valid url");
+      if !value.url.ends_with(".d.ts")
+        && (!self.use_disk_cache || !self.has_compiled_source(&url))
+      {
+        source_files.push(TranspileSourceFile {
+          source_code: value.source_code.clone(),
+          file_name: value.url.clone(),
+        });
+      }
+    }
+    if source_files.is_empty() {
+      return Ok(());
+    }
+
+    let source_files_json =
+      serde_json::to_value(source_files).expect("Filed to serialize data");
+    let compiler_config = self.config.clone();
+    let cwd = std::env::current_dir().unwrap();
+    let performance = match global_state.flags.log_level {
+      Some(Level::Debug) => true,
+      _ => false,
+    };
+    let j = match (compiler_config.path, compiler_config.content) {
+      (Some(config_path), Some(config_data)) => json!({
+        "config": str::from_utf8(&config_data).unwrap(),
+        "configPath": config_path,
+        "cwd": cwd,
+        "performance": performance,
+        "sourceFiles": source_files_json,
+        "type": msg::CompilerRequestType::Transpile,
+      }),
+      _ => json!({
+        "performance": performance,
+        "sourceFiles": source_files_json,
+        "type": msg::CompilerRequestType::Transpile,
+      }),
+    };
+
+    let req_msg = j.to_string();
+
+    let json_str =
+      execute_in_same_thread(global_state.clone(), permissions, req_msg)
+        .await?;
+
+    let transpile_response: TranspileResponse =
+      serde_json::from_str(&json_str)?;
+
+    if !transpile_response.diagnostics.items.is_empty() {
+      return Err(ErrBox::from(transpile_response.diagnostics));
+    }
+
+    maybe_log_stats(transpile_response.stats);
+
+    self.cache_emitted_files(transpile_response.emit_map)?;
+    Ok(())
   }
 
   /// Get associated `CompiledFileMetadata` for given module if it exists.
@@ -963,35 +1091,13 @@ impl TsCompiler {
 async fn execute_in_same_thread(
   global_state: GlobalState,
   permissions: Permissions,
-  req: Buf,
-) -> Result<Buf, ErrBox> {
+  req: String,
+) -> Result<String, ErrBox> {
   let mut worker = create_compiler_worker(global_state.clone(), permissions);
-  let handle = worker.thread_safe_handle();
-  handle.post_message(req)?;
-
-  let mut event_fut = handle.get_event().boxed_local();
-
-  loop {
-    let select_result = futures::future::select(event_fut, &mut worker).await;
-    match select_result {
-      Either::Left((event_result, _worker)) => {
-        let event = event_result
-          .expect("Compiler didn't respond")
-          .expect("Empty message");
-
-        let buf = match event {
-          WorkerEvent::Message(buf) => Ok(buf),
-          WorkerEvent::Error(error) => Err(error),
-          WorkerEvent::TerminalError(error) => Err(error),
-        }?;
-        return Ok(buf);
-      }
-      Either::Right((worker_result, event_fut_)) => {
-        event_fut = event_fut_;
-        worker_result?;
-      }
-    }
-  }
+  let script = format!("globalThis.tsCompilerOnMessage({{ data: {} }});", req);
+  worker.execute2("<compiler>", &script)?;
+  (&mut *worker).await?;
+  Ok(worker.get_response())
 }
 
 async fn create_runtime_module_graph(
@@ -1045,6 +1151,18 @@ async fn create_runtime_module_graph(
   Ok((root_names, module_graph_loader.get_graph()))
 }
 
+/// Because TS compiler can raise runtime error, we need to
+/// manually convert formatted JSError into and OpError.
+fn js_error_to_op_error(error: ErrBox) -> OpError {
+  match error.downcast::<JSError>() {
+    Ok(js_error) => {
+      let msg = format!("Error in TS compiler:\n{}", js_error);
+      OpError::other(msg)
+    }
+    Err(error) => error.into(),
+  }
+}
+
 /// This function is used by `Deno.compile()` API.
 pub async fn runtime_compile(
   global_state: GlobalState,
@@ -1072,16 +1190,15 @@ pub async fn runtime_compile(
     "options": maybe_options,
     "unstable": global_state.flags.unstable,
   })
-  .to_string()
-  .into_boxed_str()
-  .into_boxed_bytes();
+  .to_string();
 
   let compiler = global_state.ts_compiler.clone();
 
-  let msg = execute_in_same_thread(global_state, permissions, req_msg).await?;
-  let json_str = std::str::from_utf8(&msg).unwrap();
+  let json_str = execute_in_same_thread(global_state, permissions, req_msg)
+    .await
+    .map_err(js_error_to_op_error)?;
 
-  let response: RuntimeCompileResponse = serde_json::from_str(json_str)?;
+  let response: RuntimeCompileResponse = serde_json::from_str(&json_str)?;
 
   if response.diagnostics.is_empty() && sources.is_none() {
     compiler.cache_emitted_files(response.emit_map)?;
@@ -1090,7 +1207,7 @@ pub async fn runtime_compile(
   // We're returning `Ok()` instead of `Err()` because it's not runtime
   // error if there were diagnostics produced; we want to let user handle
   // diagnostics in the runtime.
-  Ok(serde_json::from_str::<Value>(json_str).unwrap())
+  Ok(serde_json::from_str::<Value>(&json_str).unwrap())
 }
 
 /// This function is used by `Deno.bundle()` API.
@@ -1120,17 +1237,16 @@ pub async fn runtime_bundle(
     "options": maybe_options,
     "unstable": global_state.flags.unstable,
   })
-  .to_string()
-  .into_boxed_str()
-  .into_boxed_bytes();
+  .to_string();
 
-  let msg = execute_in_same_thread(global_state, permissions, req_msg).await?;
-  let json_str = std::str::from_utf8(&msg).unwrap();
-  let _response: RuntimeBundleResponse = serde_json::from_str(json_str)?;
+  let json_str = execute_in_same_thread(global_state, permissions, req_msg)
+    .await
+    .map_err(js_error_to_op_error)?;
+  let _response: RuntimeBundleResponse = serde_json::from_str(&json_str)?;
   // We're returning `Ok()` instead of `Err()` because it's not runtime
   // error if there were diagnostics produced; we want to let user handle
   // diagnostics in the runtime.
-  Ok(serde_json::from_str::<Value>(json_str).unwrap())
+  Ok(serde_json::from_str::<Value>(&json_str).unwrap())
 }
 
 /// This function is used by `Deno.transpileOnly()` API.
@@ -1145,13 +1261,12 @@ pub async fn runtime_transpile(
     "sources": sources,
     "options": options,
   })
-  .to_string()
-  .into_boxed_str()
-  .into_boxed_bytes();
+  .to_string();
 
-  let msg = execute_in_same_thread(global_state, permissions, req_msg).await?;
-  let json_str = std::str::from_utf8(&msg).unwrap();
-  let v = serde_json::from_str::<serde_json::Value>(json_str)
+  let json_str = execute_in_same_thread(global_state, permissions, req_msg)
+    .await
+    .map_err(js_error_to_op_error)?;
+  let v = serde_json::from_str::<serde_json::Value>(&json_str)
     .expect("Error decoding JSON string.");
   Ok(v)
 }
@@ -1375,54 +1490,37 @@ fn get_deno_types(parser: &AstParser, span: Span) -> Option<String> {
   parse_deno_types(&comment)
 }
 
-// TODO(bartlomieju): refactor
 fn parse_ts_reference(comment: &str) -> Option<(TsReferenceKind, String)> {
-  let (kind, specifier_in_quotes) = if comment.starts_with("/ <reference path=")
-  {
-    (
-      TsReferenceKind::Path,
-      comment.trim_start_matches("/ <reference path="),
-    )
-  } else if comment.starts_with("/ <reference lib=") {
-    (
-      TsReferenceKind::Lib,
-      comment.trim_start_matches("/ <reference lib="),
-    )
-  } else if comment.starts_with("/ <reference types=") {
-    (
-      TsReferenceKind::Types,
-      comment.trim_start_matches("/ <reference types="),
-    )
-  } else {
+  if !XML_COMMENT_START_RE.is_match(comment) {
     return None;
-  };
+  }
 
-  let specifier = specifier_in_quotes
-    .trim_end_matches("/>")
-    .trim_end()
-    .trim_start_matches('\"')
-    .trim_start_matches('\'')
-    .trim_end_matches('\"')
-    .trim_end_matches('\'')
-    .to_string();
+  let (kind, specifier) =
+    if let Some(capture_groups) = PATH_REFERENCE_RE.captures(comment) {
+      (TsReferenceKind::Path, capture_groups.get(3).unwrap())
+    } else if let Some(capture_groups) = TYPES_REFERENCE_RE.captures(comment) {
+      (TsReferenceKind::Types, capture_groups.get(3).unwrap())
+    } else if let Some(capture_groups) = LIB_REFERENCE_RE.captures(comment) {
+      (TsReferenceKind::Lib, capture_groups.get(3).unwrap())
+    } else {
+      return None;
+    };
 
-  Some((kind, specifier))
+  Some((kind, specifier.as_str().to_string()))
 }
 
 fn parse_deno_types(comment: &str) -> Option<String> {
-  if comment.starts_with("@deno-types") {
-    let split: Vec<String> =
-      comment.split('=').map(|s| s.to_string()).collect();
-    assert_eq!(split.len(), 2);
-    let specifier_in_quotes = split.get(1).unwrap().to_string();
-    let specifier = specifier_in_quotes
-      .trim()
-      .trim_start_matches('\"')
-      .trim_start_matches('\'')
-      .trim_end_matches('\"')
-      .trim_end_matches('\'')
-      .to_string();
-    return Some(specifier);
+  if let Some(capture_groups) = DENO_TYPES_RE.captures(comment) {
+    if let Some(specifier) = capture_groups.get(1) {
+      let s = specifier
+        .as_str()
+        .trim_start_matches('\"')
+        .trim_start_matches('\'')
+        .trim_end_matches('\"')
+        .trim_end_matches('\'')
+        .to_string();
+      return Some(s);
+    }
   }
 
   None
@@ -1445,6 +1543,10 @@ mod tests {
       Some("./a/b/c.d.ts".to_string())
     );
     assert_eq!(
+      parse_deno_types("@deno-types=\"./a/b/c.d.ts\""),
+      Some("./a/b/c.d.ts".to_string())
+    );
+    assert_eq!(
       parse_deno_types("@deno-types = https://dneo.land/x/some/package/a.d.ts"),
       Some("https://dneo.land/x/some/package/a.d.ts".to_string())
     );
@@ -1454,6 +1556,16 @@ mod tests {
     );
     assert!(parse_deno_types("asdf").is_none());
     assert!(parse_deno_types("// deno-types = fooo").is_none());
+    assert_eq!(
+      parse_deno_types("@deno-types=./a/b/c.d.ts some comment"),
+      Some("./a/b/c.d.ts".to_string())
+    );
+    assert_eq!(
+      parse_deno_types(
+        "@deno-types=./a/b/c.d.ts // some comment after slashes"
+      ),
+      Some("./a/b/c.d.ts".to_string())
+    );
   }
 
   #[test]
@@ -1553,6 +1665,75 @@ mod tests {
   }
 
   #[tokio::test]
+  async fn test_transpile() {
+    let p = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+      .parent()
+      .unwrap()
+      .join("cli/tests/002_hello.ts");
+    let specifier =
+      ModuleSpecifier::resolve_url_or_path(p.to_str().unwrap()).unwrap();
+    let out = SourceFile {
+      url: specifier.as_url().clone(),
+      filename: PathBuf::from(p.to_str().unwrap().to_string()),
+      media_type: msg::MediaType::TypeScript,
+      source_code: include_bytes!("./tests/002_hello.ts").to_vec(),
+      types_header: None,
+    };
+    let dir =
+      deno_dir::DenoDir::new(Some(test_util::new_deno_dir().path().to_owned()))
+        .unwrap();
+    let http_cache = http_cache::HttpCache::new(&dir.root.join("deps"));
+    let mock_state = GlobalState::mock(
+      vec![String::from("deno"), String::from("hello.ts")],
+      None,
+    );
+    let file_fetcher = SourceFileFetcher::new(
+      http_cache,
+      true,
+      mock_state.flags.cache_blocklist.clone(),
+      false,
+      false,
+      None,
+    )
+    .unwrap();
+
+    let mut module_graph_loader = ModuleGraphLoader::new(
+      file_fetcher.clone(),
+      None,
+      Permissions::allow_all(),
+      false,
+      false,
+    );
+    module_graph_loader
+      .add_to_graph(&specifier, None)
+      .await
+      .expect("Failed to create graph");
+    let module_graph = module_graph_loader.get_graph();
+
+    let ts_compiler = TsCompiler::new(
+      file_fetcher,
+      mock_state.flags.clone(),
+      dir.gen_cache.clone(),
+    )
+    .unwrap();
+
+    let result = ts_compiler
+      .transpile(mock_state.clone(), Permissions::allow_all(), module_graph)
+      .await;
+    assert!(result.is_ok());
+    let compiled_file = ts_compiler.get_compiled_module(&out.url).unwrap();
+    let source_code = compiled_file.code;
+    assert!(source_code
+      .as_bytes()
+      .starts_with(b"console.log(\"Hello World\");"));
+    let mut lines: Vec<String> =
+      source_code.split('\n').map(|s| s.to_string()).collect();
+    let last_line = lines.pop().unwrap();
+    assert!(last_line
+      .starts_with("//# sourceMappingURL=data:application/json;base64"));
+  }
+
+  #[tokio::test]
   async fn test_bundle() {
     let p = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
       .parent()
@@ -1575,6 +1756,7 @@ mod tests {
       .ts_compiler
       .bundle(mock_state.clone(), module_name)
       .await;
+
     assert!(result.is_ok());
   }
 

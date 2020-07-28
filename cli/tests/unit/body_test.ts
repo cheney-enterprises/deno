@@ -3,9 +3,10 @@ import { unitTest, assertEquals, assert } from "./test_util.ts";
 
 // just a hack to get a body object
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildBody(body: any): Body {
+function buildBody(body: any, headers?: Headers): Body {
   const stub = new Request("", {
     body: body,
+    headers,
   });
   return stub as Body;
 }
@@ -36,14 +37,15 @@ unitTest(
   { perms: { net: true } },
   async function bodyMultipartFormData(): Promise<void> {
     const response = await fetch(
+<<<<<<< HEAD
       "http://localhost:4545/cli/tests/subdir/multipart_form_data.txt",
+=======
+      "http://localhost:4545/multipart_form_data.txt",
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
     );
     const text = await response.text();
 
-    const body = buildBody(text);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (body as any).contentType = "multipart/form-data;boundary=boundary";
+    const body = buildBody(text, response.headers);
 
     const formData = await body.formData();
     assert(formData.has("field_1"));
@@ -60,10 +62,7 @@ unitTest(
     );
     const text = await response.text();
 
-    const body = buildBody(text);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (body as any).contentType = "application/x-www-form-urlencoded";
+    const body = buildBody(text, response.headers);
 
     const formData = await body.formData();
     assert(formData.has("field_1"));

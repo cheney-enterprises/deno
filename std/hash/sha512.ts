@@ -9,6 +9,7 @@
 
 export type Message = string | number[] | ArrayBuffer;
 
+<<<<<<< HEAD
 // prettier-ignore
 const HEX_CHARS = [
   "0",
@@ -28,9 +29,13 @@ const HEX_CHARS = [
   "e",
   "f",
 ] as const;
+=======
+// deno-fmt-ignore
+const HEX_CHARS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"] as const;
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
 const EXTRA = [-2147483648, 8388608, 32768, 128] as const;
 const SHIFT = [24, 16, 8, 0] as const;
-// prettier-ignore
+// deno-fmt-ignore
 const K = [
   0x428a2f98,
   0xd728ae22,
@@ -196,7 +201,7 @@ const K = [
 
 const blocks: number[] = [];
 
-// prettier-ignore
+// deno-fmt-ignore
 export class Sha512 {
   #blocks!: number[];
   #block!: number;
@@ -850,6 +855,7 @@ export class Sha512 {
 
   hex(): string {
     this.finalize();
+<<<<<<< HEAD
     const h0h = this.#h0h,
       h0l = this.#h0l,
       h1h = this.#h1h,
@@ -868,6 +874,14 @@ export class Sha512 {
       h7l = this.#h7l,
       bits = this.#bits;
     let hex = HEX_CHARS[(h0h >> 28) & 0x0f] + HEX_CHARS[(h0h >> 24) & 0x0f] +
+=======
+    const
+      h0h = this.#h0h, h0l = this.#h0l, h1h = this.#h1h, h1l = this.#h1l, h2h = this.#h2h, h2l = this.#h2l,
+      h3h = this.#h3h, h3l = this.#h3l, h4h = this.#h4h, h4l = this.#h4l, h5h = this.#h5h, h5l = this.#h5l,
+      h6h = this.#h6h, h6l = this.#h6l, h7h = this.#h7h, h7l = this.#h7l, bits = this.#bits;
+    let hex =
+      HEX_CHARS[(h0h >> 28) & 0x0f] + HEX_CHARS[(h0h >> 24) & 0x0f] +
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
       HEX_CHARS[(h0h >> 20) & 0x0f] + HEX_CHARS[(h0h >> 16) & 0x0f] +
       HEX_CHARS[(h0h >> 12) & 0x0f] + HEX_CHARS[(h0h >> 8) & 0x0f] +
       HEX_CHARS[(h0h >> 4) & 0x0f] + HEX_CHARS[h0h & 0x0f] +

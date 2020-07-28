@@ -11,7 +11,7 @@ function assertArrayEquals(a1, a2) {
 }
 
 function main() {
-  // prettier-ignore
+  // deno-fmt-ignore
   const fixture1 = [
     0xf0,
     0x9d,
@@ -30,6 +30,7 @@ function main() {
     0x93,
     0xbd,
   ];
+<<<<<<< HEAD
   // prettier-ignore
   const fixture2 = [
     72,
@@ -50,6 +51,15 @@ function main() {
     114,
     108,
     100,
+=======
+  // deno-fmt-ignore
+  const fixture2 = [
+    72, 101, 108, 108,
+    111, 32, 239, 191,
+    189, 239, 191, 189,
+    32, 87, 111, 114,
+    108, 100
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
   ];
 
   const empty = Deno.core.encode("");

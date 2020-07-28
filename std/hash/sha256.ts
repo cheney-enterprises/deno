@@ -14,7 +14,6 @@ export type Message = string | number[] | ArrayBuffer;
 const HEX_CHARS = "0123456789abcdef".split("");
 const EXTRA = [-2147483648, 8388608, 32768, 128] as const;
 const SHIFT = [24, 16, 8, 0] as const;
-// prettier-ignore
 // deno-fmt-ignore
 const K = [
   0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1,
@@ -58,9 +57,14 @@ export class Sha256 {
 
   protected init(is224: boolean, sharedMemory: boolean): void {
     if (sharedMemory) {
+<<<<<<< HEAD
       blocks[0] = blocks[16] = blocks[1] = blocks[2] = blocks[3] = blocks[4] =
         blocks[5] = blocks[6] = blocks[7] = blocks[8] = blocks[9] = blocks[10] =
           blocks[11] = blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
+=======
+      // deno-fmt-ignore
+      blocks[0] = blocks[16] = blocks[1] = blocks[2] = blocks[3] = blocks[4] = blocks[5] = blocks[6] = blocks[7] = blocks[8] = blocks[9] = blocks[10] = blocks[11] = blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
       this.#blocks = blocks;
     } else {
       this.#blocks = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -118,9 +122,14 @@ export class Sha256 {
       if (this.#hashed) {
         this.#hashed = false;
         blocks[0] = this.#block;
+<<<<<<< HEAD
         blocks[16] = blocks[1] = blocks[2] = blocks[3] = blocks[4] = blocks[5] =
           blocks[6] = blocks[7] = blocks[8] = blocks[9] = blocks[10] =
             blocks[11] = blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
+=======
+        // deno-fmt-ignore
+        blocks[16] = blocks[1] = blocks[2] = blocks[3] = blocks[4] = blocks[5] = blocks[6] = blocks[7] = blocks[8] = blocks[9] = blocks[10] = blocks[11] = blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
       }
 
       if (typeof msg !== "string") {
@@ -183,9 +192,14 @@ export class Sha256 {
         this.hash();
       }
       blocks[0] = this.#block;
+<<<<<<< HEAD
       blocks[16] = blocks[1] = blocks[2] = blocks[3] = blocks[4] = blocks[5] =
         blocks[6] = blocks[7] = blocks[8] = blocks[9] = blocks[10] =
           blocks[11] = blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
+=======
+      // deno-fmt-ignore
+      blocks[16] = blocks[1] = blocks[2] = blocks[3] = blocks[4] = blocks[5] = blocks[6] = blocks[7] = blocks[8] = blocks[9] = blocks[10] = blocks[11] = blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
     }
     blocks[14] = (this.#hBytes << 3) | (this.#bytes >>> 29);
     blocks[15] = this.#bytes << 3;

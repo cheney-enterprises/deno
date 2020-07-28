@@ -59,8 +59,12 @@ unitTest(
     assert(tempInfo.atime !== null && now - tempInfo.atime.valueOf() < 1000);
     assert(tempInfo.mtime !== null && now - tempInfo.mtime.valueOf() < 1000);
     assert(
+<<<<<<< HEAD
       tempInfo.birthtime === null ||
         now - tempInfo.birthtime.valueOf() < 1000,
+=======
+      tempInfo.birthtime === null || now - tempInfo.birthtime.valueOf() < 1000,
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
     );
 
     const packageInfoByUrl = Deno.statSync(pathToAbsoluteFileUrl("README.md"));
@@ -192,8 +196,12 @@ unitTest(
     assert(tempInfo.mtime !== null && now - tempInfo.mtime.valueOf() < 1000);
 
     assert(
+<<<<<<< HEAD
       tempInfo.birthtime === null ||
         now - tempInfo.birthtime.valueOf() < 1000,
+=======
+      tempInfo.birthtime === null || now - tempInfo.birthtime.valueOf() < 1000,
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
     );
 
     const tempFileForUrl = await Deno.makeTempFile();

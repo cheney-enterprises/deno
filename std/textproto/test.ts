@@ -142,8 +142,12 @@ Deno.test({
 Deno.test({
   name: "[textproto] Reader : MIME Header Trim Continued",
   async fn(): Promise<void> {
+<<<<<<< HEAD
     const input = "" + // for code formatting purpose.
       "a:\n" +
+=======
+    const input = "a:\n" +
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
       " 0 \r\n" +
       "b:1 \t\r\n" +
       "c: 2\r\n" +

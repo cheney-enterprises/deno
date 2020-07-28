@@ -8,9 +8,15 @@ import {
 
 const readErrorStackPattern = new RegExp(
   `^.*
+<<<<<<< HEAD
     at unwrapResponse \\(.*dispatch_minimal\\.ts:.*\\)
     at Object.sendAsyncMinimal \\(.*dispatch_minimal\\.ts:.*\\)
     at async Object\\.read \\(.*io\\.ts:.*\\).*$`,
+=======
+    at unwrapResponse \\(.*dispatch_minimal\\.js:.*\\)
+    at sendAsync \\(.*dispatch_minimal\\.js:.*\\)
+    at async Object\\.read \\(.*io\\.js:.*\\).*$`,
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
   "ms",
 );
 

@@ -3,11 +3,11 @@ import * as base64 from "../encoding/base64.ts";
 import { notImplemented, normalizeEncoding } from "./_utils.ts";
 
 const notImplementedEncodings = [
-  "utf16le",
-  "latin1",
   "ascii",
   "binary",
+  "latin1",
   "ucs2",
+  "utf16le",
 ];
 
 function checkEncoding(encoding = "utf8", strict = true): string {
@@ -27,6 +27,46 @@ function checkEncoding(encoding = "utf8", strict = true): string {
   }
 
   return normalized;
+}
+
+interface EncodingOp {
+  byteLength(string: string): number;
+}
+
+// https://github.com/nodejs/node/blob/56dbe466fdbc598baea3bfce289bf52b97b8b8f7/lib/buffer.js#L598
+const encodingOps: { [key: string]: EncodingOp } = {
+  utf8: {
+    byteLength: (string: string): number =>
+      new TextEncoder().encode(string).byteLength,
+  },
+  ucs2: {
+    byteLength: (string: string): number => string.length * 2,
+  },
+  utf16le: {
+    byteLength: (string: string): number => string.length * 2,
+  },
+  latin1: {
+    byteLength: (string: string): number => string.length,
+  },
+  ascii: {
+    byteLength: (string: string): number => string.length,
+  },
+  base64: {
+    byteLength: (string: string): number =>
+      base64ByteLength(string, string.length),
+  },
+  hex: {
+    byteLength: (string: string): number => string.length >>> 1,
+  },
+};
+
+function base64ByteLength(str: string, bytes: number): number {
+  // Handle padding
+  if (str.charCodeAt(bytes - 1) === 0x3d) bytes--;
+  if (bytes > 1 && str.charCodeAt(bytes - 1) === 0x3d) bytes--;
+
+  // Base64 ratio: 3/4
+  return (bytes * 3) >>> 2;
 }
 
 /**
@@ -100,9 +140,12 @@ export default class Buffer extends Uint8Array {
    */
   static byteLength(
     string: string | Buffer | ArrayBufferView | ArrayBuffer | SharedArrayBuffer,
+    encoding = "utf8",
   ): number {
     if (typeof string != "string") return string.byteLength;
-    return new TextEncoder().encode(string).length;
+
+    encoding = normalizeEncoding(encoding) || "utf8";
+    return encodingOps[encoding].byteLength(string);
   }
 
   /**
@@ -204,6 +247,26 @@ export default class Buffer extends Uint8Array {
     const sourceBuffer = this.subarray(sourceStart, sourceEnd);
     targetBuffer.set(sourceBuffer, targetStart);
     return sourceBuffer.length;
+  }
+
+  /*
+   * Returns true if both buf and otherBuffer have exactly the same bytes, false otherwise.
+   */
+  equals(otherBuffer: Uint8Array | Buffer): boolean {
+    if (!(otherBuffer instanceof Uint8Array)) {
+      throw new TypeError(
+        `The "otherBuffer" argument must be an instance of Buffer or Uint8Array. Received type ${typeof otherBuffer}`,
+      );
+    }
+
+    if (this === otherBuffer) return true;
+    if (this.byteLength !== otherBuffer.byteLength) return false;
+
+    for (let i = 0; i < this.length; i++) {
+      if (this[i] !== otherBuffer[i]) return false;
+    }
+
+    return true;
   }
 
   readBigInt64BE(offset = 0): bigint {

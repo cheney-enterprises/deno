@@ -24,12 +24,17 @@ unitTest(function urlParsing(): void {
   assertEquals(
     String(url),
     "https://foo:bar@baz.qat:8000/qux/quux?foo=bar&baz=12#qat",
+<<<<<<< HEAD
   );
   assertEquals(
     JSON.stringify({ key: url }),
     `{"key":"https://foo:bar@baz.qat:8000/qux/quux?foo=bar&baz=12#qat"}`,
+=======
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
   );
+});
 
+<<<<<<< HEAD
   // IPv6 type hostname.
   const urlv6 = new URL(
     "https://foo:bar@[::1]:8000/qux/quux?foo=bar&baz=12#qat",
@@ -51,6 +56,86 @@ unitTest(function urlParsing(): void {
     JSON.stringify({ key: urlv6 }),
     `{"key":"https://foo:bar@[::1]:8000/qux/quux?foo=bar&baz=12#qat"}`,
   );
+=======
+unitTest(function urlProtocolParsing(): void {
+  assertEquals(new URL("Aa+-.1://foo").protocol, "aa+-.1:");
+  assertEquals(new URL("aA+-.1://foo").protocol, "aa+-.1:");
+  assertThrows(() => new URL("1://foo"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("+://foo"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("-://foo"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL(".://foo"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("_://foo"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("=://foo"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("!://foo"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL(`"://foo`), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("$://foo"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("%://foo"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("^://foo"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("*://foo"), TypeError, "Invalid URL.");
+});
+
+unitTest(function urlAuthenticationParsing(): void {
+  const specialUrl = new URL("http://foo:bar@baz");
+  assertEquals(specialUrl.username, "foo");
+  assertEquals(specialUrl.password, "bar");
+  assertEquals(specialUrl.hostname, "baz");
+  assertThrows(() => new URL("file://foo:bar@baz"), TypeError, "Invalid URL.");
+  const nonSpecialUrl = new URL("abcd://foo:bar@baz");
+  assertEquals(nonSpecialUrl.username, "foo");
+  assertEquals(nonSpecialUrl.password, "bar");
+  assertEquals(nonSpecialUrl.hostname, "baz");
+});
+
+unitTest(function urlHostnameParsing(): void {
+  // IPv6.
+  assertEquals(new URL("http://[::1]").hostname, "[::1]");
+  assertEquals(new URL("file://[::1]").hostname, "[::1]");
+  assertEquals(new URL("abcd://[::1]").hostname, "[::1]");
+  assertEquals(new URL("http://[0:f:0:0:f:f:0:0]").hostname, "[0:f::f:f:0:0]");
+  assertEquals(new URL("http://[0:0:5:6:7:8]").hostname, "[::5:6:7:8]");
+
+  // Forbidden host code point.
+  assertThrows(() => new URL("http:// a"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("file:// a"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("abcd:// a"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("http://%"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("file://%"), TypeError, "Invalid URL.");
+  assertEquals(new URL("abcd://%").hostname, "%");
+
+  // Percent-decode.
+  assertEquals(new URL("http://%21").hostname, "!");
+  assertEquals(new URL("file://%21").hostname, "!");
+  assertEquals(new URL("abcd://%21").hostname, "%21");
+
+  // IPv4 parsing.
+  assertEquals(new URL("http://260").hostname, "0.0.1.4");
+  assertEquals(new URL("file://260").hostname, "0.0.1.4");
+  assertEquals(new URL("abcd://260").hostname, "260");
+  assertEquals(new URL("http://255.0.0.0").hostname, "255.0.0.0");
+  assertThrows(() => new URL("http://256.0.0.0"), TypeError, "Invalid URL.");
+  assertEquals(new URL("http://0.255.0.0").hostname, "0.255.0.0");
+  assertThrows(() => new URL("http://0.256.0.0"), TypeError, "Invalid URL.");
+  assertEquals(new URL("http://0.0.255.0").hostname, "0.0.255.0");
+  assertThrows(() => new URL("http://0.0.256.0"), TypeError, "Invalid URL.");
+  assertEquals(new URL("http://0.0.0.255").hostname, "0.0.0.255");
+  assertThrows(() => new URL("http://0.0.0.256"), TypeError, "Invalid URL.");
+  assertEquals(new URL("http://0.0.65535").hostname, "0.0.255.255");
+  assertThrows(() => new URL("http://0.0.65536"), TypeError, "Invalid URL.");
+  assertEquals(new URL("http://0.16777215").hostname, "0.255.255.255");
+  assertThrows(() => new URL("http://0.16777216"), TypeError, "Invalid URL.");
+  assertEquals(new URL("http://4294967295").hostname, "255.255.255.255");
+  assertThrows(() => new URL("http://4294967296"), TypeError, "Invalid URL.");
+});
+
+unitTest(function urlPortParsing(): void {
+  const specialUrl = new URL("http://foo:8000");
+  assertEquals(specialUrl.hostname, "foo");
+  assertEquals(specialUrl.port, "8000");
+  assertThrows(() => new URL("file://foo:8000"), TypeError, "Invalid URL.");
+  const nonSpecialUrl = new URL("abcd://foo:8000");
+  assertEquals(nonSpecialUrl.hostname, "foo");
+  assertEquals(nonSpecialUrl.port, "8000");
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
 });
 
 unitTest(function urlModifications(): void {
@@ -164,26 +249,26 @@ unitTest(function urlBackSlashes(): void {
   );
 });
 
+unitTest(function urlProtocolSlashes(): void {
+  assertEquals(new URL("http:foo").href, "http://foo/");
+  assertEquals(new URL("http://foo").href, "http://foo/");
+  assertEquals(new URL("file:foo").href, "file:///foo");
+  assertEquals(new URL("file://foo").href, "file://foo/");
+  assertEquals(new URL("abcd:foo").href, "abcd:foo");
+  assertEquals(new URL("abcd://foo").href, "abcd://foo");
+});
+
 unitTest(function urlRequireHost(): void {
   assertEquals(new URL("file:///").href, "file:///");
-  assertThrows(() => {
-    new URL("ftp:///");
-  });
-  assertThrows(() => {
-    new URL("http:///");
-  });
-  assertThrows(() => {
-    new URL("https:///");
-  });
-  assertThrows(() => {
-    new URL("ws:///");
-  });
-  assertThrows(() => {
-    new URL("wss:///");
-  });
+  assertThrows(() => new URL("ftp:///"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("http:///"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("https:///"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("ws:///"), TypeError, "Invalid URL.");
+  assertThrows(() => new URL("wss:///"), TypeError, "Invalid URL.");
 });
 
 unitTest(function urlDriveLetter() {
+<<<<<<< HEAD
   assertEquals(
     new URL("file:///C:").href,
     Deno.build.os == "windows" ? "file:///C:/" : "file:///C:",
@@ -204,14 +289,39 @@ unitTest(function urlUncHostname() {
     new URL("file:////server/file").href,
     Deno.build.os == "windows" ? "file://server/file" : "file:////server/file",
   );
+=======
+  assertEquals(new URL("file:///C:").href, "file:///C:");
+  assertEquals(new URL("file:///C:/").href, "file:///C:/");
+  assertEquals(new URL("file:///C:/..").href, "file:///C:/");
+  // Don't recognise drive letters with extra leading slashes.
+  assertEquals(new URL("file:////C:/..").href, "file:///");
+  // Drop the hostname if a drive letter is parsed.
+  assertEquals(new URL("file://foo/C:").href, "file:///C:");
+  // Don't recognise drive letters in non-file protocols.
+  assertEquals(new URL("http://foo/C:/..").href, "http://foo/");
+  assertEquals(new URL("abcd://foo/C:/..").href, "abcd://foo/");
 });
 
 unitTest(function urlHostnameUpperCase() {
-  assertEquals(new URL("https://EXAMPLE.COM").href, "https://example.com/");
+  assertEquals(new URL("http://EXAMPLE.COM").href, "http://example.com/");
+  assertEquals(new URL("abcd://EXAMPLE.COM").href, "abcd://EXAMPLE.COM");
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
+});
+
+unitTest(function urlEmptyPath() {
+  assertEquals(new URL("http://foo").pathname, "/");
+  assertEquals(new URL("file://foo").pathname, "/");
+  assertEquals(new URL("abcd://foo").pathname, "");
+});
+
+unitTest(function urlPathRepeatedSlashes() {
+  assertEquals(new URL("http://foo//bar//").pathname, "//bar//");
+  assertEquals(new URL("file://foo///bar//").pathname, "/bar//");
+  assertEquals(new URL("abcd://foo//bar//").pathname, "//bar//");
 });
 
 unitTest(function urlTrim() {
-  assertEquals(new URL(" https://example.com  ").href, "https://example.com/");
+  assertEquals(new URL(" http://example.com  ").href, "http://example.com/");
 });
 
 unitTest(function urlEncoding() {
@@ -223,11 +333,9 @@ unitTest(function urlEncoding() {
     new URL("https://:a !$&*()=,;+'\"@example.com").password,
     "a%20!$&*()%3D,%3B+%27%22",
   );
-  // FIXME: https://url.spec.whatwg.org/#idna
-  // assertEquals(
-  //   new URL("https://a !$&*()=,+'\"").hostname,
-  //   "a%20%21%24%26%2A%28%29%3D%2C+%27%22"
-  // );
+  assertEquals(new URL("abcde://mañana/c?d#e").hostname, "ma%C3%B1ana");
+  // https://url.spec.whatwg.org/#idna
+  assertEquals(new URL("https://mañana/c?d#e").hostname, "xn--maana-pta");
   assertEquals(
     new URL("https://example.com/a ~!@$&*()=:/,;+'\"\\").pathname,
     "/a%20~!@$&*()=:/,;+'%22/",
@@ -242,6 +350,7 @@ unitTest(function urlEncoding() {
   );
 });
 
+<<<<<<< HEAD
 unitTest(function urlBaseURL(): void {
   const base = new URL(
     "https://foo:bar@baz.qat:8000/qux/quux?foo=bar&baz=12#qat",
@@ -257,18 +366,50 @@ unitTest(function urlBaseString(): void {
   );
   assertEquals(url.href, "https://foo:bar@baz.qat:8000/foo/bar?baz=foo#qux");
 });
+=======
+unitTest(function urlBase(): void {
+  assertEquals(new URL("d", new URL("http://foo/a?b#c")).href, "http://foo/d");
 
-unitTest(function urlRelativeWithBase(): void {
-  assertEquals(new URL("", "file:///a/a/a").href, "file:///a/a/a");
-  assertEquals(new URL(".", "file:///a/a/a").href, "file:///a/a/");
-  assertEquals(new URL("..", "file:///a/a/a").href, "file:///a/");
-  assertEquals(new URL("b", "file:///a/a/a").href, "file:///a/a/b");
-  assertEquals(new URL("b", "file:///a/a/a/").href, "file:///a/a/a/b");
-  assertEquals(new URL("b/", "file:///a/a/a").href, "file:///a/a/b/");
-  assertEquals(new URL("../b", "file:///a/a/a").href, "file:///a/b");
+  assertEquals(new URL("", "http://foo/a/b?c#d").href, "http://foo/a/b?c");
+  assertEquals(new URL("", "file://foo/a/b?c#d").href, "file://foo/a/b?c");
+  assertEquals(new URL("", "abcd://foo/a/b?c#d").href, "abcd://foo/a/b?c");
+
+  assertEquals(new URL("#e", "http://foo/a/b?c#d").href, "http://foo/a/b?c#e");
+  assertEquals(new URL("#e", "file://foo/a/b?c#d").href, "file://foo/a/b?c#e");
+  assertEquals(new URL("#e", "abcd://foo/a/b?c#d").href, "abcd://foo/a/b?c#e");
+
+  assertEquals(new URL("?e", "http://foo/a/b?c#d").href, "http://foo/a/b?e");
+  assertEquals(new URL("?e", "file://foo/a/b?c#d").href, "file://foo/a/b?e");
+  assertEquals(new URL("?e", "abcd://foo/a/b?c#d").href, "abcd://foo/a/b?e");
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
+
+  assertEquals(new URL("e", "http://foo/a/b?c#d").href, "http://foo/a/e");
+  assertEquals(new URL("e", "file://foo/a/b?c#d").href, "file://foo/a/e");
+  assertEquals(new URL("e", "abcd://foo/a/b?c#d").href, "abcd://foo/a/e");
+
+  assertEquals(new URL(".", "http://foo/a/b?c#d").href, "http://foo/a/");
+  assertEquals(new URL(".", "file://foo/a/b?c#d").href, "file://foo/a/");
+  assertEquals(new URL(".", "abcd://foo/a/b?c#d").href, "abcd://foo/a/");
+
+  assertEquals(new URL("..", "http://foo/a/b?c#d").href, "http://foo/");
+  assertEquals(new URL("..", "file://foo/a/b?c#d").href, "file://foo/");
+  assertEquals(new URL("..", "abcd://foo/a/b?c#d").href, "abcd://foo/");
+
+  assertEquals(new URL("/e", "http://foo/a/b?c#d").href, "http://foo/e");
+  assertEquals(new URL("/e", "file://foo/a/b?c#d").href, "file://foo/e");
+  assertEquals(new URL("/e", "abcd://foo/a/b?c#d").href, "abcd://foo/e");
+
+  assertEquals(new URL("//bar", "http://foo/a/b?c#d").href, "http://bar/");
+  assertEquals(new URL("//bar", "file://foo/a/b?c#d").href, "file://bar/");
+  assertEquals(new URL("//bar", "abcd://foo/a/b?c#d").href, "abcd://bar");
+
+  assertEquals(new URL("efgh:", "http://foo/a/b?c#d").href, "efgh:");
+  assertEquals(new URL("efgh:", "file://foo/a/b?c#d").href, "efgh:");
+  assertEquals(new URL("efgh:", "abcd://foo/a/b?c#d").href, "efgh:");
 });
 
 unitTest(function urlDriveLetterBase() {
+<<<<<<< HEAD
   assertEquals(
     new URL("/b", "file:///C:/a/b").href,
     Deno.build.os == "windows" ? "file:///C:/b" : "file:///b",
@@ -285,10 +426,20 @@ unitTest(function urlDriveLetterBase() {
     new URL("D:/b", "file:///C:/a/b").href,
     Deno.build.os == "windows" ? "file:///D:/b" : "file:///C:/a/D:/b",
   );
+=======
+  assertEquals(new URL("/b", "file:///C:/a/b").href, "file:///C:/b");
+  assertEquals(new URL("/D:", "file:///C:/a/b").href, "file:///D:");
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
 });
 
-unitTest(function emptyBasePath(): void {
-  assertEquals(new URL("", "http://example.com").href, "http://example.com/");
+unitTest(function urlSameProtocolBase() {
+  assertEquals(new URL("http:", "http://foo/a").href, "http://foo/a");
+  assertEquals(new URL("file:", "file://foo/a").href, "file://foo/a");
+  assertEquals(new URL("abcd:", "abcd://foo/a").href, "abcd:");
+
+  assertEquals(new URL("http:b", "http://foo/a").href, "http://foo/b");
+  assertEquals(new URL("file:b", "file://foo/a").href, "file://foo/b");
+  assertEquals(new URL("abcd:b", "abcd://foo/a").href, "abcd:b");
 });
 
 unitTest(function deletingAllParamsRemovesQuestionMarkFromURL(): void {
@@ -336,12 +487,6 @@ unitTest(function protocolNotHttpOrFile() {
   assertEquals(url.origin, "null");
 });
 
-unitTest(function createBadUrl(): void {
-  assertThrows(() => {
-    new URL("0.0.0.0:8080");
-  });
-});
-
 unitTest(function throwForInvalidPortConstructor(): void {
   const urls = [
     // If port is greater than 2^16 − 1, validation error, return failure.
@@ -361,6 +506,7 @@ unitTest(function throwForInvalidPortConstructor(): void {
   new URL("https://baz.qat:0");
 });
 
+<<<<<<< HEAD
 unitTest(function throwForInvalidSchemeConstructor(): void {
   assertThrows(
     () => new URL("invalid_scheme://baz.qat"),
@@ -369,6 +515,8 @@ unitTest(function throwForInvalidSchemeConstructor(): void {
   );
 });
 
+=======
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
 unitTest(function doNotOverridePortIfInvalid(): void {
   const initialPort = "3000";
   const ports = [

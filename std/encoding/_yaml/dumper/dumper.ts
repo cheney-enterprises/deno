@@ -6,7 +6,7 @@
 /* eslint-disable max-len */
 
 import { YAMLError } from "../error.ts";
-import { RepresentFn, StyleVariant, Type } from "../type.ts";
+import type { RepresentFn, StyleVariant, Type } from "../type.ts";
 import * as common from "../utils.ts";
 import { DumperState, DumperStateOptions } from "./dumper_state.ts";
 
@@ -499,9 +499,13 @@ function writeScalar(
         return `'${string.replace(/'/g, "''")}'`;
       case STYLE_LITERAL:
         return `|${blockHeader(string, state.indent)}${
+<<<<<<< HEAD
           dropEndingNewline(
             indentString(string, indent),
           )
+=======
+          dropEndingNewline(indentString(string, indent))
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
         }`;
       case STYLE_FOLDED:
         return `>${blockHeader(string, state.indent)}${

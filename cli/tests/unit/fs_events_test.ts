@@ -1,5 +1,5 @@
 // Copyright 2018-2019 the Deno authors. All rights reserved. MIT license.
-import { unitTest, assert, assertThrows } from "./test_util.ts";
+import { unitTest, assert, assertEquals, assertThrows } from "./test_util.ts";
 
 // TODO(ry) Add more tests to specify format.
 
@@ -59,4 +59,25 @@ unitTest(
     assert(events[1].kind == "create" || events[1].kind == "modify");
     assert(events[1].paths[0].includes(testDir));
   },
+<<<<<<< HEAD
+=======
+);
+
+unitTest(
+  { perms: { read: true, write: true } },
+  async function watchFsReturn(): Promise<void> {
+    const testDir = await Deno.makeTempDir();
+    const iter = Deno.watchFs(testDir);
+
+    // Asynchronously loop events.
+    const eventsPromise = getTwoEvents(iter);
+
+    // Close the watcher.
+    await iter.return!();
+
+    // Expect zero events.
+    const events = await eventsPromise;
+    assertEquals(events, []);
+  },
+>>>>>>> ccd0d0eb79db6ad33095ca06e9d491a27379b87a
 );
